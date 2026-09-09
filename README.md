@@ -7,6 +7,7 @@
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
 [![JavaScript](https://img.shields.io/badge/Language-Vanilla%20JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![HTML5 Canvas](https://img.shields.io/badge/Graphics-WebGL-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API)
+[![Java DSA Roadmap](https://img.shields.io/badge/🗺️_Java_DSA_Roadmap-Learn_More-ED8B00?style=for-the-badge&logoColor=white)](https://github.com/Pradeep-B28/JAVA-DSA-Roadmap)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 <p align="center">
@@ -47,8 +48,8 @@ No build tools required! Simply serve the static directory:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Pradeep-B28/GIT---viz.git
-cd git-viz
+git clone https://github.com/Pradeep-B28/GIT_3D_Portfolio.git
+cd GIT_3D_Portfolio
 
 # Launch local server using Python or npx
 python -m http.server 8080
@@ -60,6 +61,6 @@ python -m http.server 8080
 
 <div align="center">
 
-Created by **[Pradeep](https://github.com/Pradeep-B28)**
+Created by **[Pradeep](https://github.com/Pradeep-B28)** • Check out the **[Java + DSA Roadmap](https://github.com/Pradeep-B28/JAVA-DSA-Roadmap)**
 
 </div>
