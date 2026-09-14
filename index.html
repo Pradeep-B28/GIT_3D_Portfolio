@@ -3,86 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>git-viz — 3D GitHub Skyline, Galaxy, Duel & Archipelago Visualizer</title>
-    <meta name="description" content="Transform GitHub profiles into 3D city skylines, repo galaxies, developer duels, and tech archipelago islands with Three.js, shaders, and Web Audio.">
-    <style>
+    <title>Pradeep B — Founder @ Softech & 3D GitHub Visualizer</title>
+    <meta name="description" content="3D WebGL GitHub Skyline & Galaxy Visualizer built by Pradeep B (Founder of Softech, L&D Lead Architect). Explore projects, apply for jobs, and enroll in placement training courses.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --bg-color: #06090e;
-            --text-color: #f8fafc;
-            --accent-color: #00f0ff;
-            --teal-color: #178f7f;
-            --mint-color: #5fe0c4;
-            --navy-color: #0b2a45;
-            --purple-color: #7000ff;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-sub: #cbd5e1;
+            --accent-cyan: #00f0ff;
+            --accent-teal: #178f7f;
+            --accent-mint: #5fe0c4;
+            --accent-navy: #0b2a45;
+            --accent-purple: #7000ff;
             --card-bg: rgba(10, 15, 24, 0.88);
-            --border-color: rgba(95, 224, 196, 0.35);
-            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --font-heading: 'Outfit', sans-serif;
+            --card-bg-hover: rgba(15, 23, 42, 0.95);
+            --border-color: rgba(95, 224, 196, 0.3);
+            --border-glow: rgba(0, 240, 255, 0.45);
+            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-pill: 40px;
         }
 
         * {
             box-sizing: border-box;
             user-select: none;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
             overflow: hidden;
             font-family: var(--font-family);
             background-color: var(--bg-color);
-            color: var(--text-color);
+            color: var(--text-main);
             width: 100vw;
             height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* --- Header & Control Bar --- */
+        /* --- Custom Scrollbar for HUD Panels --- */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(6, 9, 14, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-teal);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-mint);
+        }
+
+        /* --- Top Navigation Header Control Bar --- */
         #ui-header {
             position: absolute;
             top: 14px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 20;
+            z-index: 50;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             background: var(--card-bg);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             padding: 8px 18px;
-            border-radius: 40px;
+            border-radius: var(--radius-pill);
             border: 1px solid var(--border-color);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
-            max-width: 98vw;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(23, 143, 127, 0.2);
+            max-width: 96vw;
             flex-wrap: wrap;
             justify-content: center;
         }
 
         .mode-switch {
             display: flex;
-            background: rgba(15, 23, 42, 0.85);
-            padding: 4px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 3px;
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .mode-btn {
-            padding: 6px 14px;
+            padding: 7px 15px;
             border-radius: 20px;
             border: none;
             background: transparent;
-            color: #94a3b8;
+            color: var(--text-muted);
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.25s ease;
             white-space: nowrap;
             font-family: var(--font-heading);
+            letter-spacing: 0.3px;
+        }
+
+        .mode-btn:hover {
+            color: var(--text-main);
         }
 
         .mode-btn.active {
-            background: linear-gradient(135deg, #178f7f, #00f0ff);
-            color: #0b2a45;
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-cyan));
+            color: var(--accent-navy);
             font-weight: 800;
             box-shadow: 0 4px 16px rgba(0, 240, 255, 0.45);
         }
@@ -90,36 +126,44 @@
         .input-group {
             display: flex;
             align-items: center;
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.9);
             border-radius: 30px;
             padding: 4px 14px;
-            border: 1px solid rgba(95, 224, 196, 0.4);
+            border: 1px solid var(--border-color);
+            transition: border-color 0.2s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
         }
 
         .input-group span {
-            color: #5fe0c4;
+            color: var(--accent-mint);
             font-size: 13px;
             font-weight: 700;
             margin-right: 4px;
+            font-family: var(--font-heading);
         }
 
         .username-input {
             border: none;
             background: transparent;
-            color: #f8fafc;
+            color: var(--text-main);
             font-size: 14px;
             font-weight: 700;
             width: 110px;
             outline: none;
-            padding: 5px 0;
+            padding: 4px 0;
             font-family: var(--font-heading);
         }
 
         .btn {
-            display: flex;
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
-            padding: 7px 14px;
+            padding: 8px 16px;
             border-radius: 30px;
             border: none;
             font-weight: 700;
@@ -128,270 +172,463 @@
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             outline: none;
             white-space: nowrap;
+            font-family: var(--font-heading);
+            letter-spacing: 0.3px;
+            text-decoration: none;
         }
 
-        .btn:hover { transform: translateY(-1px); }
-        .btn:active { transform: translateY(1px) scale(0.97); }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
 
         .btn-primary {
-            background: linear-gradient(135deg, #238636, #2ea043);
-            color: #ffffff;
-            box-shadow: 0 4px 14px rgba(46, 160, 67, 0.4);
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-cyan));
+            color: var(--accent-navy);
+            font-weight: 800;
+            box-shadow: 0 4px 16px rgba(0, 240, 255, 0.35);
         }
 
         .btn-secondary {
-            background: rgba(33, 38, 45, 0.85);
-            color: #c9d1d9;
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--accent-mint);
             border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(23, 143, 127, 0.2);
+            color: #ffffff;
         }
 
         .btn-record {
-            background: linear-gradient(135deg, #da3633, #f85149);
+            background: linear-gradient(135deg, #e11d48, #f43f5e);
             color: #ffffff;
-            box-shadow: 0 4px 14px rgba(248, 81, 73, 0.4);
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
         }
 
         .select-custom {
-            background: rgba(33, 38, 45, 0.85);
-            color: #c9d1d9;
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-sub);
             border: 1px solid var(--border-color);
             border-radius: 30px;
-            padding: 6px 12px;
+            padding: 7px 14px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             outline: none;
             cursor: pointer;
+            font-family: var(--font-heading);
         }
 
         /* --- Presets Bar --- */
         #presets-bar {
             position: absolute;
-            top: 68px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 15;
+            z-index: 45;
             display: flex;
-            gap: 6px;
+            gap: 8px;
             align-items: center;
+            background: rgba(6, 9, 14, 0.6);
+            backdrop-filter: blur(12px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .preset-chip {
-            background: rgba(22, 27, 34, 0.75);
-            border: 1px solid rgba(48, 54, 61, 0.6);
-            backdrop-filter: blur(8px);
-            color: #8b949e;
-            padding: 4px 10px;
-            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(95, 224, 196, 0.3);
+            color: var(--text-muted);
+            padding: 4px 12px;
+            border-radius: 14px;
             font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .preset-chip:hover {
-            color: #f0f6fc;
-            border-color: var(--accent-color);
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
         }
 
-        /* --- Profile Card (Bottom Left) --- */
-        #profile-card {
+        /* --- LEFT SIDEBAR EXECUTIVE HUD CONTAINER --- */
+        #left-sidebar {
             position: absolute;
-            bottom: 20px;
+            top: 72px;
             left: 20px;
-            z-index: 20;
-            background: var(--card-bg);
-            backdrop-filter: blur(18px);
-            padding: 16px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-            width: 260px;
-            transition: all 0.3s ease;
+            z-index: 40;
+            width: 320px;
+            max-height: calc(100vh - 110px);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
 
+        .hud-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            padding: 18px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(23, 143, 127, 0.15);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hud-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(0, 240, 255, 0.25);
+        }
+
+        /* --- Softech Founder Card --- */
+        .badge-founder {
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-mint));
+            color: var(--accent-navy);
+            font-size: 10px;
+            font-weight: 900;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-family: var(--font-heading);
+        }
+
+        .softech-title {
+            margin: 8px 0 6px 0;
+            font-size: 16px;
+            color: var(--text-main);
+            font-weight: 800;
+            font-family: var(--font-heading);
+            line-height: 1.3;
+        }
+
+        .softech-desc {
+            margin: 0 0 14px 0;
+            font-size: 12px;
+            color: var(--text-sub);
+            line-height: 1.5;
+        }
+
+        .softech-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .btn-cta-primary {
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-cyan));
+            color: var(--accent-navy);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 800;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 16px rgba(0, 240, 255, 0.35);
+            transition: all 0.2s ease;
+            font-family: var(--font-heading);
+        }
+
+        .btn-cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 240, 255, 0.5);
+        }
+
+        .btn-cta-secondary {
+            background: rgba(15, 23, 42, 0.85);
+            color: var(--accent-mint);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 9px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            font-family: var(--font-heading);
+        }
+
+        .btn-cta-secondary:hover {
+            background: rgba(23, 143, 127, 0.25);
+            border-color: var(--accent-mint);
+            color: #ffffff;
+        }
+
+        /* --- User Profile Card --- */
         .profile-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
+            gap: 14px;
+            margin-bottom: 12px;
         }
 
         #avatar {
-            width: 44px;
-            height: 44px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            border: 2px solid var(--accent-color);
+            border: 2.5px solid var(--accent-cyan);
             object-fit: cover;
             background: #161b22;
+            box-shadow: 0 0 16px rgba(0, 240, 255, 0.3);
         }
 
         .user-details h2 {
             margin: 0;
-            font-size: 16px;
-            font-weight: 700;
-            color: #f0f6fc;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text-main);
+            font-family: var(--font-heading);
         }
 
         .user-details p {
-            margin: 2px 0 0 0;
-            font-size: 11px;
-            color: #8b949e;
+            margin: 3px 0 0 0;
+            font-size: 12px;
+            color: var(--accent-mint);
+            font-weight: 600;
+        }
+
+        .mentorship-banner {
+            background: rgba(23, 143, 127, 0.18);
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: var(--accent-mint);
+            line-height: 1.45;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-            background: rgba(22, 27, 34, 0.5);
-            padding: 8px;
-            border-radius: 12px;
-            margin-bottom: 8px;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 12px;
         }
 
-        .stat-item { display: flex; flex-direction: column; }
-        .stat-label { font-size: 9px; text-transform: uppercase; color: #8b949e; }
-        .stat-value { font-size: 13px; font-weight: 700; color: #f0f6fc; }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
 
-        .lang-bar { display: flex; height: 6px; border-radius: 4px; overflow: hidden; background: #21262d; margin-top: 4px; }
-        .lang-segment { height: 100%; transition: width 0.5s ease; }
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
 
-        /* --- Timeline Playback Controller Bar (Bottom Center) --- */
+        .stat-value {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-main);
+            font-family: var(--font-heading);
+            margin-top: 2px;
+        }
+
+        .lang-bar-container {
+            margin-bottom: 14px;
+        }
+
+        .lang-bar-header {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .lang-bar {
+            display: flex;
+            height: 7px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .lang-segment {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        /* --- Timeline Controller Bar (Bottom Center) --- */
         #timeline-bar {
             position: absolute;
-            bottom: 20px;
+            bottom: 22px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 20;
+            z-index: 50;
             background: var(--card-bg);
-            backdrop-filter: blur(18px);
-            padding: 8px 18px;
-            border-radius: 40px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            padding: 8px 20px;
+            border-radius: var(--radius-pill);
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            width: 420px;
+            gap: 14px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+            width: 440px;
             max-width: 90vw;
         }
 
         #play-btn {
-            background: var(--accent-color);
-            color: #ffffff;
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-cyan));
+            color: var(--accent-navy);
             border: none;
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
+            font-weight: 900;
             flex-shrink: 0;
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0, 240, 255, 0.4);
         }
 
-        #play-btn:hover { transform: scale(1.1); }
+        #play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.6);
+        }
 
         #scrubber {
             flex-grow: 1;
-            accent-color: var(--accent-color);
+            accent-color: var(--accent-cyan);
             cursor: pointer;
+            height: 6px;
         }
 
         #timeline-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--accent-color);
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--accent-cyan);
             white-space: nowrap;
-            min-width: 90px;
+            min-width: 95px;
             text-align: right;
+            font-family: var(--font-heading);
         }
 
         /* --- Duel VS Comparison Leaderboard Banner --- */
         #duel-banner {
             position: absolute;
-            top: 68px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 18;
+            z-index: 45;
             display: none;
             background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            padding: 8px 20px;
-            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            padding: 8px 24px;
+            border-radius: var(--radius-pill);
             border: 1px solid var(--border-color);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             align-items: center;
-            gap: 16px;
-            font-size: 13px;
-            font-weight: 700;
+            gap: 18px;
+            font-size: 14px;
+            font-weight: 800;
+            font-family: var(--font-heading);
         }
 
         .duel-player { display: flex; align-items: center; gap: 8px; }
-        .p1-color { color: #00f0ff; }
+        .p1-color { color: var(--accent-cyan); }
         .p2-color { color: #ff0055; }
-        .vs-badge { background: #30363d; padding: 2px 8px; border-radius: 10px; font-size: 10px; color: #f0f6fc; }
+        .vs-badge { background: #30363d; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #f0f6fc; }
 
-        /* --- Camera Widget & Controls --- */
+        /* --- Right Vertical Camera Toolbar --- */
         #camera-widget {
             position: absolute;
-            top: 14px;
-            right: 14px;
-            z-index: 20;
+            top: 72px;
+            right: 20px;
+            z-index: 45;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 10px;
         }
 
         .icon-btn {
-            width: 36px; height: 36px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            color: #c9d1d9;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 15px; cursor: pointer;
-            backdrop-filter: blur(12px);
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            cursor: pointer;
+            backdrop-filter: blur(16px);
             transition: all 0.2s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
         }
 
         .icon-btn:hover, .icon-btn.active {
-            background: #30363d; color: #ffffff; border-color: var(--accent-color);
+            background: rgba(23, 143, 127, 0.3);
+            color: #ffffff;
+            border-color: var(--accent-cyan);
+            transform: scale(1.08);
+            box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
         }
 
         /* --- Drone Flight Control HUD --- */
         #drone-hud {
             position: absolute;
-            bottom: 80px;
+            bottom: 84px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 25;
-            background: rgba(13, 17, 23, 0.9);
-            border: 1px solid var(--accent-color);
-            backdrop-filter: blur(12px);
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: #f0f6fc;
+            z-index: 45;
+            background: rgba(6, 9, 14, 0.94);
+            border: 1px solid var(--accent-cyan);
+            backdrop-filter: blur(16px);
+            padding: 10px 22px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            color: var(--text-main);
             display: none;
-            gap: 12px;
+            gap: 14px;
             align-items: center;
-            box-shadow: 0 8px 24px rgba(0,240,255,0.2);
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+            font-family: var(--font-heading);
         }
 
         /* --- Tooltip & Toast --- */
         #tooltip {
             position: absolute;
-            z-index: 30;
+            z-index: 60;
             pointer-events: none;
-            background: rgba(13, 17, 23, 0.94);
-            border: 1px solid rgba(88, 166, 255, 0.4);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 12px;
-            color: #f0f6fc;
+            background: rgba(6, 9, 14, 0.96);
+            border: 1px solid var(--accent-cyan);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            color: var(--text-main);
             opacity: 0;
             transform: translate(-50%, -120%);
             transition: opacity 0.15s ease, transform 0.15s ease;
@@ -399,42 +636,100 @@
         }
         #tooltip.active { opacity: 1; }
 
+        .tooltip-date { font-weight: 800; color: var(--accent-cyan); font-family: var(--font-heading); margin-bottom: 2px; }
+        .tooltip-count { font-size: 12px; color: var(--text-sub); }
+
         #toast {
-            position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
-            z-index: 35; background: rgba(46, 160, 67, 0.95); color: #ffffff;
-            padding: 8px 22px; border-radius: 30px; font-weight: 600; font-size: 13px;
-            opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            position: absolute;
+            top: 115px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 65;
+            background: linear-gradient(135deg, var(--accent-teal), #2ea043);
+            color: #ffffff;
+            padding: 10px 26px;
+            border-radius: var(--radius-pill);
+            font-weight: 800;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            font-family: var(--font-heading);
         }
         #toast.show { opacity: 1; }
 
-        /* --- Settings Modal --- */
-        #settings-modal {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 100; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center;
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 100;
+            background: rgba(6, 9, 14, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
+
         .modal-card {
-            background: #161b22; border: 1px solid #30363d; padding: 24px;
-            border-radius: 20px; width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            background: var(--card-bg-hover);
+            border: 1px solid var(--border-glow);
+            padding: 30px;
+            border-radius: 24px;
+            width: 540px;
+            max-width: 95vw;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9);
+            color: var(--text-main);
         }
-        .modal-card h3 { margin: 0 0 10px 0; color: #f0f6fc; }
-        .modal-card p { font-size: 12px; color: #8b949e; margin-bottom: 14px; line-height: 1.4; }
+
+        .modal-card h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-main);
+            font-family: var(--font-heading);
+        }
+
+        .modal-card p {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
         .modal-input {
-            width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #30363d;
-            background: #0d1117; color: #f0f6fc; outline: none; margin-bottom: 16px; font-size: 13px;
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: rgba(6, 9, 14, 0.8);
+            color: var(--text-main);
+            outline: none;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-family: var(--font-heading);
+        }
+
+        .modal-input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
         }
 
         @media (max-width: 768px) {
-            #timeline-bar { width: 280px; }
-            #profile-card { width: 220px; bottom: 70px; left: 12px; }
+            #left-sidebar { width: 280px; left: 12px; }
+            #timeline-bar { width: 300px; }
             #presets-bar { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation Header -->
+    <!-- Top Navigation Header Control Bar -->
     <div id="ui-header">
         <div class="mode-switch">
             <button class="mode-btn active" id="mode-skyline">🏙️ Skyline</button>
@@ -471,8 +766,8 @@
 
     <!-- Quick Username Presets -->
     <div id="presets-bar">
-        <span style="font-size: 11px; color: #6e7681;">Presets:</span>
-        <div class="preset-chip" onclick="loadPreset('Pradeep-B28')" style="border-color: #178f7f; color: #5fe0c4; font-weight: 700;">⭐ Pradeep-B28</div>
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">PRESETS:</span>
+        <div class="preset-chip" onclick="loadPreset('Pradeep-B28')" style="border-color: var(--accent-mint); color: var(--accent-mint); font-weight: 800;">⭐ Pradeep-B28</div>
         <div class="preset-chip" onclick="loadPreset('octocat')">octocat</div>
         <div class="preset-chip" onclick="loadPreset('torvalds')">torvalds</div>
         <div class="preset-chip" onclick="loadPreset('gaearon')">gaearon</div>
@@ -487,7 +782,7 @@
         <div class="duel-player p2-color"><span id="p2-name">gaearon</span> (<span id="p2-score">0</span>★)</div>
     </div>
 
-    <!-- Camera Controls & Special Features Bar -->
+    <!-- Right Vertical Camera Toolbar -->
     <div id="camera-widget">
         <button class="icon-btn" id="btn-iso" title="Isometric 3D View">📐</button>
         <button class="icon-btn" id="btn-top" title="Top-Down View">🗺️</button>
@@ -501,59 +796,64 @@
 
     <!-- Drone Street View HUD Controls -->
     <div id="drone-hud">
-        <span>🚶 <b>Drone Mode:</b> WASD = Move | Q/E = Altitude | Drag Mouse = Look Around</span>
-        <button class="btn btn-secondary" id="exit-drone-btn" style="padding: 3px 10px; font-size: 11px;">Exit</button>
+        <span>🚶 <b>Drone Mode Active:</b> WASD = Move | Q/E = Altitude | Drag Mouse = Look Around</span>
+        <button class="btn btn-secondary" id="exit-drone-btn" style="padding: 4px 12px; font-size: 11px;">Exit Drone</button>
     </div>
 
-    <!-- Softech Founder Showcase Banner -->
-    <div id="softech-card" style="position: absolute; top: 110px; left: 20px; z-index: 20; background: rgba(11, 42, 69, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); padding: 16px; border-radius: 20px; border: 1px solid rgba(95, 224, 196, 0.6); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7); width: 290px; transition: all 0.3s ease;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <span style="background: linear-gradient(135deg, #178f7f, #5fe0c4); color: #0b2a45; font-size: 10px; font-weight: 900; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;">🚀 SOFTECH FOUNDER</span>
-            <span style="font-size: 10px; color: #5fe0c4; font-weight: 700;">Pradeep B</span>
-        </div>
-        <h3 style="margin: 0 0 4px 0; font-size: 15px; color: #ffffff; font-weight: 800; font-family: var(--font-heading);">Softech Portal: Jobs & Courses</h3>
-        <p style="margin: 0 0 12px 0; font-size: 11px; color: #cbd5e1; line-height: 1.45;">
-            Founded by <b>Pradeep B</b>. Access the official website to <b>apply for jobs & hiring drives</b> or <b>enroll in placement training courses</b> (Java, DSA, Full Stack, MERN, AWS).
-        </p>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-            <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="background: linear-gradient(135deg, #178f7f, #00f0ff); color: #0b2a45; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 12px; font-size: 11px; font-weight: 800; border-radius: 16px; border: none; box-shadow: 0 4px 14px rgba(0, 240, 255, 0.4);">
-                💼 Apply for Jobs & Hiring Drives
-            </a>
-            <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="background: rgba(15, 23, 42, 0.85); color: #5fe0c4; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 7px 12px; font-size: 11px; font-weight: 700; border-radius: 16px; border: 1px solid rgba(95, 224, 196, 0.5);">
-                🎓 Enroll in Placement Courses
-            </a>
-        </div>
-    </div>
-
-    <!-- User Profile Card -->
-    <div id="profile-card">
-        <div class="profile-header">
-            <img id="avatar" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="Avatar">
-            <div class="user-details">
-                <h2 id="user-name">Pradeep B</h2>
-                <p id="user-bio">Founder @ Softech | L&D Lead Architect</p>
+    <!-- LEFT EXECUTIVE SIDEBAR CONTAINER -->
+    <div id="left-sidebar">
+        <!-- 1. Softech Founder Showcase Card -->
+        <div class="hud-card" id="softech-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span class="badge-founder">🚀 SOFTECH FOUNDER</span>
+                <span style="font-size: 11px; color: var(--accent-mint); font-weight: 800;">Pradeep B</span>
+            </div>
+            <h3 class="softech-title">Softech Platform: Jobs & Courses</h3>
+            <p class="softech-desc">
+                Founded by <b>Pradeep B</b>. Visit the official portal to <b>apply for active jobs & hiring drives</b> or <b>enroll in placement training courses</b>.
+            </p>
+            <div class="softech-actions">
+                <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener noreferrer" class="btn-cta-primary">
+                    💼 Apply for Jobs & Hiring Drives
+                </a>
+                <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener noreferrer" class="btn-cta-secondary">
+                    🎓 Enroll in Placement Courses
+                </a>
             </div>
         </div>
 
-        <div style="background: rgba(23, 143, 127, 0.2); border: 1px solid rgba(95, 224, 196, 0.4); padding: 8px 10px; border-radius: 12px; margin-bottom: 10px; font-size: 11px; color: #5fe0c4; line-height: 1.35;">
-            💡 <b>Mentored 7,500+ Engineers</b> across VIT, SIT & KSR. Driving campus placement outcomes from <b>70% ➔ 90%</b>.
-        </div>
+        <!-- 2. Developer Profile Card -->
+        <div class="hud-card" id="profile-card">
+            <div class="profile-header">
+                <img id="avatar" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="Avatar">
+                <div class="user-details">
+                    <h2 id="user-name">Pradeep B</h2>
+                    <p id="user-bio">Founder @ Softech | L&D Lead</p>
+                </div>
+            </div>
 
-        <div class="stats-grid">
-            <div class="stat-item"><span class="stat-label">Public Repos</span><span class="stat-value" id="repo-count">10</span></div>
-            <div class="stat-item"><span class="stat-label">Stars Earned</span><span class="stat-value" id="star-count">3,540</span></div>
-            <div class="stat-item"><span class="stat-label">Followers</span><span class="stat-value" id="follower-count">2,850</span></div>
-            <div class="stat-item"><span class="stat-label">365d Activity</span><span class="stat-value" id="total-commits">1,420</span></div>
-        </div>
+            <div class="mentorship-banner">
+                💡 <b>Mentored 7,500+ Engineers</b> across VIT, SIT & KSR. Driving campus placement outcomes from <b>70% ➔ 90%</b>.
+            </div>
 
-        <div style="font-size: 11px; color: #8b949e; display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>Top Language</span><span id="top-lang-name">Java / Python</span>
-        </div>
-        <div class="lang-bar" id="lang-bar"></div>
+            <div class="stats-grid">
+                <div class="stat-item"><span class="stat-label">Public Repos</span><span class="stat-value" id="repo-count">10</span></div>
+                <div class="stat-item"><span class="stat-label">Stars Earned</span><span class="stat-value" id="star-count">3,540</span></div>
+                <div class="stat-item"><span class="stat-label">Followers</span><span class="stat-value" id="follower-count">2,850</span></div>
+                <div class="stat-item"><span class="stat-label">365d Activity</span><span class="stat-value" id="total-commits">1,420</span></div>
+            </div>
 
-        <button id="open-bio-modal-btn" class="btn btn-secondary" style="width: 100%; margin-top: 10px; padding: 7px; font-size: 11px; font-weight: 700; color: #00f0ff; border-color: rgba(0, 240, 255, 0.4); background: rgba(0, 240, 255, 0.12); cursor: pointer;">
-            👨‍💻 Open Founder Profile & Bio
-        </button>
+            <div class="lang-bar-container">
+                <div class="lang-bar-header">
+                    <span>Top Language</span><span id="top-lang-name" style="color: var(--accent-cyan);">Java / Python</span>
+                </div>
+                <div class="lang-bar" id="lang-bar"></div>
+            </div>
+
+            <button id="open-bio-modal-btn" class="btn btn-secondary" style="width: 100%; padding: 9px; font-size: 12px; font-weight: 800; color: var(--accent-cyan); border-color: rgba(0, 240, 255, 0.4); background: rgba(0, 240, 255, 0.12);">
+                👨‍💻 Open Founder Executive Bio
+            </button>
+        </div>
     </div>
 
     <!-- 12-Month Timeline Controller -->
@@ -571,34 +871,34 @@
     <div id="toast">Notification</div>
 
     <!-- Founder Profile & Bio Modal -->
-    <div id="founder-bio-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100; background: rgba(6, 9, 14, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; padding: 20px;">
-        <div class="modal-card" style="background: #0a0f18; border: 1px solid rgba(95, 224, 196, 0.5); padding: 30px; border-radius: 24px; width: 540px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.9); color: #f8fafc;">
+    <div id="founder-bio-modal" class="modal-overlay">
+        <div class="modal-card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="background: linear-gradient(135deg, #178f7f, #5fe0c4); color: #0b2a45; font-size: 10px; font-weight: 900; padding: 3px 10px; border-radius: 12px; text-transform: uppercase;">🚀 FOUNDER PROFILE</span>
-                    <h3 style="margin: 0; font-size: 1.3rem; color: #ffffff; font-family: var(--font-heading);">Pradeep B</h3>
+                    <span class="badge-founder">🚀 FOUNDER PROFILE</span>
+                    <h3 style="margin: 0;">Pradeep B</h3>
                 </div>
-                <button id="close-bio-modal-btn" style="background: transparent; border: none; color: #94a3b8; font-size: 22px; cursor: pointer;">✕</button>
+                <button id="close-bio-modal-btn" style="background: transparent; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer;">✕</button>
             </div>
 
-            <p style="font-size: 0.92rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px;">
-                I am <b>Pradeep B</b> — Founder of <b>Softech</b> (<a href="https://reachsoftech.onrender.com/home" target="_blank" style="color: #5fe0c4;">reachsoftech.onrender.com/home</a>), L&D Lead Architect, and 3D WebGL Software Engineer. I mentor engineering candidates, direct a 25-member trainer squad across premier campuses (VIT University, SIT Madurai, KSR Institutions), and build enterprise software platforms.
+            <p style="font-size: 14px; color: var(--text-sub); line-height: 1.6; margin-bottom: 16px;">
+                I am <b>Pradeep B</b> — Founder of <b>Softech</b> (<a href="https://reachsoftech.onrender.com/home" target="_blank" style="color: var(--accent-mint); font-weight: 700;">reachsoftech.onrender.com/home</a>), L&D Lead Architect, and 3D WebGL Software Engineer. I mentor engineering candidates, direct a 25-member trainer squad across premier campuses (VIT University, SIT Madurai, KSR Institutions), and build enterprise software platforms.
             </p>
 
-            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.12); padding: 16px; border-radius: 16px; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 8px 0; color: #5fe0c4; font-size: 0.95rem;">🚀 Official Softech Website Services:</h4>
-                <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #cbd5e1; line-height: 1.6;">
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); padding: 16px; border-radius: 16px; margin-bottom: 22px;">
+                <h4 style="margin: 0 0 10px 0; color: var(--accent-mint); font-size: 14px; font-weight: 800; font-family: var(--font-heading);">🚀 Official Softech Website Services:</h4>
+                <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-sub); line-height: 1.6;">
                     <li>💼 <b>Apply for Job Placements & Hiring Drives</b></li>
                     <li>🎓 <b>Enroll in Placement Training Courses</b> (Java & DSA 15 Patterns, Full Stack, MERN, AWS Cloud, System Design)</li>
                     <li>🏫 <b>Campus-to-Corporate Placement Bootcamps</b> for Engineering Institutions</li>
                 </ul>
             </div>
 
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="https://reachsoftech.onrender.com/home" target="_blank" class="btn btn-primary" style="background: linear-gradient(135deg, #178f7f, #00f0ff); color: #0b2a45; font-weight: 800; text-decoration: none; padding: 10px 18px; border-radius: 14px; flex-grow: 1; text-align: center;">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="https://reachsoftech.onrender.com/home" target="_blank" class="btn btn-primary" style="padding: 12px 20px; font-size: 13px; border-radius: var(--radius-md); flex-grow: 1;">
                     🌐 Visit Softech Portal (Jobs & Courses)
                 </a>
-                <a href="https://www.linkedin.com/in/pradeepb-2k" target="_blank" class="btn btn-secondary" style="color: #ffffff; text-decoration: none; padding: 10px 18px; border-radius: 14px; border: 1px solid #30363d;">
+                <a href="https://www.linkedin.com/in/pradeepb-2k" target="_blank" class="btn btn-secondary" style="padding: 12px 20px; font-size: 13px; border-radius: var(--radius-md);">
                     LinkedIn Profile
                 </a>
             </div>
@@ -606,14 +906,14 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settings-modal">
+    <div id="settings-modal" class="modal-overlay">
         <div class="modal-card">
             <h3>⚙️ Settings</h3>
             <p>Enter a Personal Access Token (PAT) if you hit GitHub API rate limits (60 req/hr).</p>
             <input type="password" id="pat-input" class="modal-input" placeholder="ghp_xxxxxxxxxxxx">
-            <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
                 <button class="btn btn-secondary" id="close-settings-btn">Close</button>
-                <button class="btn btn-primary" id="save-settings-btn">Save</button>
+                <button class="btn btn-primary" id="save-settings-btn">Save PAT</button>
             </div>
         </div>
     </div>
@@ -725,7 +1025,7 @@
 
         // ----- Theme Configurations -----
         const THEMES = {
-            github: { bg: 0x0d1117, grid: 0x30363d, fog: 0x0d1117, palette: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'], emissive: 0x00ff66, light: 0xffeedd, weather: 'dust' },
+            github: { bg: 0x06090e, grid: 0x1f242c, fog: 0x06090e, palette: ['#0f172a', '#178f7f', '#00f0ff', '#5fe0c4', '#ffffff'], emissive: 0x00f0ff, light: 0x5fe0c4, weather: 'dust' },
             cyberpunk: { bg: 0x080414, grid: 0xff007f, fog: 0x080414, palette: ['#140824', '#4a0e4e', '#800080', '#ff007f', '#00f0ff'], emissive: 0xff007f, light: 0xff00aa, weather: 'embers' },
             emerald: { bg: 0x02120b, grid: 0x0d4026, fog: 0x02120b, palette: ['#041a10', '#0a3a22', '#12633a', '#1fb86c', '#55ff9e'], emissive: 0x39d353, light: 0x55ff9e, weather: 'rain' },
             sunset: { bg: 0x180b18, grid: 0x4a223e, fog: 0x180b18, palette: ['#241024', '#57183e', '#9b2b52', '#e65c40', '#ffb03a'], emissive: 0xffa020, light: 0xffaa44, weather: 'embers' },
@@ -769,7 +1069,7 @@
         controls.maxPolarAngle = Math.PI / 2.05;
         controls.target.set(0, 2, 0);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
         scene.add(ambientLight);
 
         const dirLight1 = new THREE.DirectionalLight(currentTheme.light, 2.2);
@@ -779,7 +1079,7 @@
         dirLight1.shadow.mapSize.height = 2048;
         scene.add(dirLight1);
 
-        const dirLight2 = new THREE.DirectionalLight(0x4488ff, 0.8);
+        const dirLight2 = new THREE.DirectionalLight(0x00f0ff, 0.9);
         dirLight2.position.set(-25, 15, -25);
         scene.add(dirLight2);
 
@@ -810,9 +1110,9 @@
             const canvas = document.createElement('canvas');
             canvas.width = 64; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#0a0d12';
+            ctx.fillStyle = '#06090e';
             ctx.fillRect(0, 0, 64, 128);
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#00f0ff';
             for (let y = 8; y < 120; y += 12) {
                 for (let x = 8; x < 56; x += 14) {
                     if (Math.random() > 0.35) {
@@ -845,7 +1145,7 @@
             }
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             const mat = new THREE.PointsMaterial({
-                color: isStorming ? 0x77ccff : currentTheme.emissive,
+                color: isStorming ? 0x00f0ff : currentTheme.emissive,
                 size: isStorming ? 0.22 : 0.3,
                 transparent: true,
                 opacity: 0.65
@@ -973,7 +1273,7 @@
             const mockUser = {
                 login: username,
                 name: isPradeep ? 'Pradeep B (Founder of Softech)' : (username.charAt(0).toUpperCase() + username.slice(1)),
-                bio: isPradeep ? 'Founder @ Softech | L&D Lead | Java & 3D WebGL Creator' : 'Open Source Developer & 3D Creator',
+                bio: isPradeep ? 'Founder @ Softech | L&D Lead Architect' : 'Open Source Developer & 3D Creator',
                 followers: isPradeep ? 2850 : 1420,
                 public_repos: isPradeep ? 10 : 38,
                 avatar_url: `https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png`
@@ -982,7 +1282,7 @@
             let mockRepos = [];
             if (isPradeep) {
                 mockRepos = [
-                    { name: 'Softech-Portal', stargazers_count: 520, language: 'Python', html_url: 'https://reachsoftech.onrender.com/home', description: 'Softech Web Portal - Jobs & Technical Courses (Founder: Pradeep B)' },
+                    { name: 'Softech-Portal', stargazers_count: 520, language: 'Python', html_url: 'https://reachsoftech.onrender.com/home', description: 'Softech Web Portal - Jobs & Placement Courses (Founder: Pradeep B)' },
                     { name: 'JAVA-DSA-Roadmap', stargazers_count: 890, language: 'Java', html_url: 'https://github.com/Pradeep-B28/JAVA-DSA-Roadmap' },
                     { name: 'GIT_3D_Portfolio', stargazers_count: 430, language: 'JavaScript', html_url: 'https://github.com/Pradeep-B28/GIT_3D_Portfolio' },
                     { name: 'Portfolio', stargazers_count: 380, language: 'TypeScript', html_url: 'https://github.com/Pradeep-B28/Portfolio' },
@@ -1063,7 +1363,7 @@
 
         function getLangColor(lang) {
             const map = { 'JavaScript': '#f1e05a', 'TypeScript': '#3178c6', 'Python': '#3572A5', 'Java': '#b07219', 'C++': '#f34b7d', 'C#': '#178600', 'Go': '#00ADD8', 'Rust': '#dea584', 'HTML': '#e34c26', 'CSS': '#563d7c', 'Ruby': '#701516', 'PHP': '#4F5D95' };
-            return map[lang] || '#58a6ff';
+            return map[lang] || '#00f0ff';
         }
 
         function generate365Grid(events, repos) {
@@ -1098,11 +1398,11 @@
         }
 
         // 3D Canvas Text Sprite Generator
-        function createTextSprite(text, color = '#f0f6fc') {
+        function createTextSprite(text, color = '#f8fafc') {
             const canvas = document.createElement('canvas');
             canvas.width = 300; canvas.height = 70;
             const ctx = canvas.getContext('2d');
-            ctx.font = 'Bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.font = 'Bold 20px Outfit, sans-serif';
             ctx.fillStyle = color;
             ctx.textAlign = 'center';
             ctx.shadowColor = 'rgba(0,0,0,0.85)';
@@ -1141,7 +1441,7 @@
                         color: new THREE.Color(hexColor),
                         roughness: 0.3, metalness: 0.4,
                         emissive: new THREE.Color(hexColor),
-                        emissiveIntensity: cell.level > 0 ? 0.25 : 0.02,
+                        emissiveIntensity: cell.level > 0 ? 0.3 : 0.02,
                         map: cell.level >= 2 ? windowTexture : null
                     });
 
@@ -1162,7 +1462,7 @@
                     // Rooftop beacon antenna for spires
                     if (cell.level >= 4) {
                         const antGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.4, 6);
-                        const antMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
+                        const antMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
                         const antenna = new THREE.Mesh(antGeo, antMat);
                         antenna.position.set(x, targetHeight + 0.7, z);
                         parentGroup.add(antenna);
@@ -1189,12 +1489,12 @@
             // 🏆 Star Magnet Monument (Golden Star Obelisk)
             if (stars > 20) {
                 const baseGeo = new THREE.CylinderGeometry(1.2, 1.5, 0.8, 8);
-                const baseMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.8, roughness: 0.2 });
+                const baseMat = new THREE.MeshStandardMaterial({ color: 0x178f7f, metalness: 0.8, roughness: 0.2 });
                 const base = new THREE.Mesh(baseGeo, baseMat);
                 base.position.set(-26, 0.4, 6);
 
                 const starGeo = new THREE.OctahedronGeometry(1.2, 0);
-                const starMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.6 });
+                const starMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x178f7f, emissiveIntensity: 0.8 });
                 const starMesh = new THREE.Mesh(starGeo, starMat);
                 starMesh.position.set(-26, 2.5, 6);
                 starMesh.userData = { isTrophy: true, title: '🏆 Star Magnet Monument', desc: `Earned ${stars} total GitHub repository stars!` };
@@ -1205,7 +1505,7 @@
             // 🦉 24-Hour Circadian Clock Tower
             const clockBase = new THREE.BoxGeometry(1.4, 8, 1.4);
             clockBase.translate(0, 4, 0);
-            const clockMat = new THREE.MeshStandardMaterial({ color: 0x30363d, emissive: 0x58a6ff, emissiveIntensity: 0.2 });
+            const clockMat = new THREE.MeshStandardMaterial({ color: 0x0b2a45, emissive: 0x178f7f, emissiveIntensity: 0.3 });
             const clockTower = new THREE.Mesh(clockBase, clockMat);
             clockTower.position.set(26, 0, 6);
             clockTower.userData = { isTrophy: true, title: '🦉 24-Hour Circadian Clock', desc: 'Peak Coding Hours: Midnight - 2:00 AM Night Owl' };
@@ -1230,7 +1530,7 @@
             const core = new THREE.Mesh(coreGeo, coreMat);
             galaxyGroup.add(core);
 
-            const coreLabel = createTextSprite(`@${user.login}`, '#58a6ff');
+            const coreLabel = createTextSprite(`@${user.login}`, '#00f0ff');
             coreLabel.position.set(0, 3.8, 0);
             galaxyGroup.add(coreLabel);
 
@@ -1244,7 +1544,7 @@
                 const starScale = 0.6 + Math.min(2.5, (repo.stargazers_count || 0) / 10);
                 const color = getLangColor(repo.language);
                 const repoGeo = new THREE.SphereGeometry(starScale, 16, 16);
-                const repoMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color), emissive: new THREE.Color(color), emissiveIntensity: 0.5 });
+                const repoMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color), emissive: new THREE.Color(color), emissiveIntensity: 0.6 });
                 const repoMesh = new THREE.Mesh(repoGeo, repoMat);
                 repoMesh.position.set(x, y, z);
 
@@ -1287,7 +1587,7 @@
 
                 // Floating Low-Poly Island Base
                 const islandGeo = new THREE.CylinderGeometry(4 + rList.length * 0.4, 2, 1.2, 7);
-                const islandMat = new THREE.MeshStandardMaterial({ color: 0x161b22, roughness: 0.8 });
+                const islandMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
                 const island = new THREE.Mesh(islandGeo, islandMat);
                 island.position.set(ix, -0.6, iz);
                 islandsGroup.add(island);
@@ -1340,7 +1640,7 @@
             clearGroup(cityGroup);
             interactiveMeshes.length = 0;
 
-            const p1Palette = ['#082032', '#0f4c75', '#3282b8', '#00f0ff', '#ffffff'];
+            const p1Palette = ['#082032', '#178f7f', '#00f0ff', '#5fe0c4', '#ffffff'];
             const p2Palette = ['#2b0015', '#67002d', '#9e0031', '#ff0055', '#ffaa00'];
 
             build3DSkyline(grid1, cityGroup, p1Palette, 28, d1);
