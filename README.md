@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 <p align="center">
-  <a href="#-featured-platform--softech">Featured Platform: Softech</a> •
+  <a href="#-featured-platform--softech-founder-pradeep-b">Featured Platform: Softech</a> •
   <a href="#-visualization-modes">Visualization Modes</a> •
   <a href="#-controls">WASD Flight Controls</a> •
   <a href="#-quick-start">Quick Start</a>
@@ -29,9 +29,11 @@
 >
 > **Pradeep B is the Founder of Softech.**
 >
-> **Softech** is an enterprise career portal and placement training platform where users can **find job opportunities, campus placement drives, and industry-aligned courses** in Java, Data Structures & Algorithms, Full Stack Development, MERN Stack, AWS Cloud, and System Design.
+> **Softech** is an enterprise career portal and placement training platform where users can:
+> - 💼 **Apply for Jobs & Campus Recruitment Drives**: Access direct technology job opportunities and campus drive listings.
+> - 🎓 **Enroll in Placement Training Courses**: Join industry-aligned technical courses in Java & DSA (15 Patterns), Full Stack Web Development, MERN Stack, AWS Cloud Computing, and System Design.
 >
-> Visit **[https://reachsoftech.onrender.com/home](https://reachsoftech.onrender.com/home)** to explore job listings, course curricula, and 1-on-1 placement mentorship.
+> Visit **[https://reachsoftech.onrender.com/home](https://reachsoftech.onrender.com/home)** to apply for jobs and enroll in placement courses!
 
 ---
 
@@ -76,6 +78,6 @@ python -m http.server 8080
 
 <div align="center">
 
-Created by **[Pradeep](https://github.com/Pradeep-B28)** (Founder of **[Softech](https://reachsoftech.onrender.com/home)**) • Check out **[JAVA-DSA-Roadmap](https://github.com/Pradeep-B28/JAVA-DSA-Roadmap)**
+Created by **[Pradeep B](https://github.com/Pradeep-B28)** (Founder of **[Softech](https://reachsoftech.onrender.com/home)**) • Apply for Jobs & Courses @ **[reachsoftech.onrender.com/home](https://reachsoftech.onrender.com/home)**
 
 </div>
