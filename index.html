@@ -70,23 +70,64 @@
         /* --- Top Navigation Header Control Bar --- */
         #ui-header {
             position: absolute;
-            top: 14px;
+            top: 12px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 50;
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: var(--card-bg);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            padding: 8px 18px;
+            gap: 10px;
+            background: rgba(6, 9, 14, 0.92);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            padding: 6px 14px;
             border-radius: var(--radius-pill);
             border: 1px solid var(--border-color);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(23, 143, 127, 0.2);
-            max-width: 96vw;
-            flex-wrap: wrap;
-            justify-content: center;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(23, 143, 127, 0.25);
+            max-width: 98vw;
+            white-space: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        #ui-header::-webkit-scrollbar { display: none; }
+
+        .header-brand-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(23, 143, 127, 0.35), rgba(0, 240, 255, 0.2));
+            border: 1px solid var(--accent-mint);
+            padding: 5px 12px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            font-family: var(--font-heading);
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .header-brand-pill:hover {
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-cyan));
+            color: var(--accent-navy);
+            box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
+        }
+
+        .brand-pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-mint);
+            box-shadow: 0 0 8px var(--accent-mint);
+            animation: pulse-dot 1.8s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.8; }
         }
 
         .mode-switch {
@@ -95,10 +136,11 @@
             padding: 3px;
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
 
         .mode-btn {
-            padding: 7px 15px;
+            padding: 6px 14px;
             border-radius: 20px;
             border: none;
             background: transparent;
@@ -131,6 +173,7 @@
             padding: 4px 14px;
             border: 1px solid var(--border-color);
             transition: border-color 0.2s ease;
+            flex-shrink: 0;
         }
 
         .input-group:focus-within {
@@ -150,9 +193,9 @@
             border: none;
             background: transparent;
             color: var(--text-main);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
-            width: 110px;
+            width: 105px;
             outline: none;
             padding: 4px 0;
             font-family: var(--font-heading);
@@ -163,7 +206,7 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 8px 16px;
+            padding: 7px 15px;
             border-radius: 30px;
             border: none;
             font-weight: 700;
@@ -175,6 +218,7 @@
             font-family: var(--font-heading);
             letter-spacing: 0.3px;
             text-decoration: none;
+            flex-shrink: 0;
         }
 
         .btn:hover {
@@ -214,29 +258,31 @@
             color: var(--text-sub);
             border: 1px solid var(--border-color);
             border-radius: 30px;
-            padding: 7px 14px;
+            padding: 6px 12px;
             font-size: 12px;
             font-weight: 700;
             outline: none;
             cursor: pointer;
             font-family: var(--font-heading);
+            flex-shrink: 0;
         }
 
         /* --- Presets Bar --- */
         #presets-bar {
             position: absolute;
-            top: 70px;
+            top: 64px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 45;
             display: flex;
             gap: 8px;
             align-items: center;
-            background: rgba(6, 9, 14, 0.6);
-            backdrop-filter: blur(12px);
-            padding: 4px 12px;
+            background: rgba(6, 9, 14, 0.75);
+            backdrop-filter: blur(16px);
+            padding: 4px 14px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(95, 224, 196, 0.25);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
 
         .preset-chip {
@@ -260,11 +306,11 @@
         /* --- LEFT SIDEBAR EXECUTIVE HUD CONTAINER --- */
         #left-sidebar {
             position: absolute;
-            top: 72px;
+            top: 96px;
             left: 20px;
             z-index: 40;
-            width: 320px;
-            max-height: calc(100vh - 110px);
+            width: 330px;
+            max-height: calc(100vh - 120px);
             display: flex;
             flex-direction: column;
             gap: 14px;
@@ -731,6 +777,11 @@
 
     <!-- Top Navigation Header Control Bar -->
     <div id="ui-header">
+        <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener" class="header-brand-pill" title="Visit Softech Platform (Jobs & Courses)">
+            <span class="brand-pulse"></span>
+            <span>SOFTECH FOUNDER</span>
+        </a>
+
         <div class="mode-switch">
             <button class="mode-btn active" id="mode-skyline">🏙️ Skyline</button>
             <button class="mode-btn" id="mode-galaxy">🌌 Galaxy</button>
