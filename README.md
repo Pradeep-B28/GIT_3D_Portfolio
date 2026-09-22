@@ -7,33 +7,32 @@
 [![Three.js](https://img.shields.io/badge/Three.js-r160-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
 [![JavaScript](https://img.shields.io/badge/Language-Vanilla%20JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![HTML5 Canvas](https://img.shields.io/badge/Graphics-WebGL-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API)
-[![Softech Platform](https://img.shields.io/badge/🚀_Softech_Platform-Jobs_%26_Courses-178F7F?style=for-the-badge&logoColor=white)](https://reachsoftech.onrender.com/home)
-[![Java DSA Roadmap](https://img.shields.io/badge/🗺️_Java_DSA_Roadmap-Learn_More-ED8B00?style=for-the-badge&logoColor=white)](https://github.com/Pradeep-B28/JAVA-DSA-Roadmap)
+[![Softech Platform](https://img.shields.io/badge/🚀_Softech_Platform-Live_Website-178F7F?style=for-the-badge&logo=render&logoColor=white)](https://reachsoftech.onrender.com/home)
+[![Ping Me](https://img.shields.io/badge/📩_Ping_Me-Custom_Websites-5FE0C4?style=for-the-badge&logo=gmail&logoColor=black)](mailto:pradeepbashaa@gmail.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 <p align="center">
-  <a href="#-featured-platform--softech-founder-pradeep-b">Featured Platform: Softech</a> •
-  <a href="#-visualization-modes">Visualization Modes</a> •
-  <a href="#-controls">WASD Flight Controls</a> •
+  <a href="#-featured-platform--softech-website-created-by-pradeep-b">Featured Website</a> •
+  <a href="#-visualization-modes">3D Modes</a> •
+  <a href="#-controls">WASD Controls</a> •
   <a href="#-quick-start">Quick Start</a>
 </p>
 
----
-
 </div>
 
-## 🚀 Featured Platform: Softech (Founder: Pradeep B)
+---
 
 > [!IMPORTANT]
-> ### 🌐 Official Softech Website: **[https://reachsoftech.onrender.com/home](https://reachsoftech.onrender.com/home)**
+> ### 🌐 Featured Website: Softech (Created by Pradeep B)
+> **Official Softech Website**: **[https://reachsoftech.onrender.com/home](https://reachsoftech.onrender.com/home)**
 >
-> **Pradeep B is the Founder of Softech.**
+> 💡 **I have created a website for Softech. If u want like this ping me!**
 >
 > **Softech** is an enterprise career portal and placement training platform where users can:
 > - 💼 **Apply for Jobs & Campus Recruitment Drives**: Access direct technology job opportunities and campus drive listings.
 > - 🎓 **Enroll in Placement Training Courses**: Join industry-aligned technical courses in Java & DSA (15 Patterns), Full Stack Web Development, MERN Stack, AWS Cloud Computing, and System Design.
 >
-> Visit **[https://reachsoftech.onrender.com/home](https://reachsoftech.onrender.com/home)** to apply for jobs and enroll in placement courses!
+> Visit **[reachsoftech.onrender.com/home](https://reachsoftech.onrender.com/home)** to explore live jobs and courses!
 
 ---
 
@@ -78,6 +77,11 @@ python -m http.server 8080
 
 <div align="center">
 
-Created by **[Pradeep B](https://github.com/Pradeep-B28)** (Founder of **[Softech](https://reachsoftech.onrender.com/home)**) • Apply for Jobs & Courses @ **[reachsoftech.onrender.com/home](https://reachsoftech.onrender.com/home)**
+### 📩 Want a custom website or 3D WebGL app like this? Ping me!
+
+Created by **[Pradeep B](https://github.com/Pradeep-B28)** (I have created a website for **[Softech](https://reachsoftech.onrender.com/home)**. If u want like this ping me!)
+
+[![Email](https://img.shields.io/badge/Email-pradeepbashaa%40gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:pradeepbashaa@gmail.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Pradeep_B-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pradeepb-2k)
 
 </div>

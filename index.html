@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pradeep B — Founder @ Softech & 3D GitHub Visualizer</title>
-    <meta name="description" content="3D WebGL GitHub Skyline & Galaxy Visualizer built by Pradeep B (Founder of Softech, L&D Lead Architect). Explore projects, apply for jobs, and enroll in placement training courses.">
+    <title>Pradeep B - Web Developer for Softech & 3D GitHub Visualizer</title>
+    <meta name="description" content="3D WebGL GitHub Skyline & Galaxy Visualizer built by Pradeep B. I have created a website for Softech (reachsoftech.onrender.com/home). If u want like this ping me!">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -779,7 +779,7 @@
     <div id="ui-header">
         <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener" class="header-brand-pill" title="Visit Softech Platform (Jobs & Courses)">
             <span class="brand-pulse"></span>
-            <span>SOFTECH FOUNDER</span>
+            <span>SOFTECH WEBSITE</span>
         </a>
 
         <div class="mode-switch">
@@ -853,15 +853,15 @@
 
     <!-- LEFT EXECUTIVE SIDEBAR CONTAINER -->
     <div id="left-sidebar">
-        <!-- 1. Softech Founder Showcase Card -->
+        <!-- 1. Softech Showcase Card -->
         <div class="hud-card" id="softech-card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                <span class="badge-founder">🚀 SOFTECH FOUNDER</span>
+                <span class="badge-founder">🚀 SOFTECH WEBSITE</span>
                 <span style="font-size: 11px; color: var(--accent-mint); font-weight: 800;">Pradeep B</span>
             </div>
             <h3 class="softech-title">Softech Platform: Jobs & Courses</h3>
             <p class="softech-desc">
-                Founded by <b>Pradeep B</b>. Visit the official portal to <b>apply for active jobs & hiring drives</b> or <b>enroll in placement training courses</b>.
+                I have created a website for <b>Softech</b>. If u want like this ping me! Visit the official portal to <b>apply for active jobs & hiring drives</b> or <b>enroll in placement training courses</b>.
             </p>
             <div class="softech-actions">
                 <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener noreferrer" class="btn-cta-primary">
@@ -879,7 +879,7 @@
                 <img id="avatar" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="Avatar">
                 <div class="user-details">
                     <h2 id="user-name">Pradeep B</h2>
-                    <p id="user-bio">Founder @ Softech | L&D Lead</p>
+                    <p id="user-bio">Created Website for Softech | L&D Lead</p>
                 </div>
             </div>
 
@@ -902,7 +902,7 @@
             </div>
 
             <button id="open-bio-modal-btn" class="btn btn-secondary" style="width: 100%; padding: 9px; font-size: 12px; font-weight: 800; color: var(--accent-cyan); border-color: rgba(0, 240, 255, 0.4); background: rgba(0, 240, 255, 0.12);">
-                👨‍💻 Open Founder Executive Bio
+                👉 Open Executive Bio & Softech Showcase
             </button>
         </div>
     </div>
@@ -926,14 +926,14 @@
         <div class="modal-card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span class="badge-founder">🚀 FOUNDER PROFILE</span>
+                    <span class="badge-founder">🚀 EXECUTIVE PROFILE</span>
                     <h3 style="margin: 0;">Pradeep B</h3>
                 </div>
-                <button id="close-bio-modal-btn" style="background: transparent; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer;">✕</button>
+                <button class="modal-close" id="close-bio-modal-btn">&times;</button>
             </div>
 
             <p style="font-size: 14px; color: var(--text-sub); line-height: 1.6; margin-bottom: 16px;">
-                I am <b>Pradeep B</b> — Founder of <b>Softech</b> (<a href="https://reachsoftech.onrender.com/home" target="_blank" style="color: var(--accent-mint); font-weight: 700;">reachsoftech.onrender.com/home</a>), L&D Lead Architect, and 3D WebGL Software Engineer. I mentor engineering candidates, direct a 25-member trainer squad across premier campuses (VIT University, SIT Madurai, KSR Institutions), and build enterprise software platforms.
+                I am <b>Pradeep B</b> - L&D Lead Architect and 3D WebGL Software Engineer. <b>I have created a website for Softech</b> (<a href="https://reachsoftech.onrender.com/home" target="_blank" style="color: var(--accent-mint); font-weight: 700;">reachsoftech.onrender.com/home</a>). If u want like this ping me! I mentor engineering candidates, direct a 25-member trainer squad across premier campuses (VIT University, SIT Madurai, KSR Institutions), and build enterprise software platforms.
             </p>
 
             <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); padding: 16px; border-radius: 16px; margin-bottom: 22px;">
@@ -1323,8 +1323,8 @@
             const isPradeep = username.toLowerCase() === 'pradeep-b28';
             const mockUser = {
                 login: username,
-                name: isPradeep ? 'Pradeep B (Founder of Softech)' : (username.charAt(0).toUpperCase() + username.slice(1)),
-                bio: isPradeep ? 'Founder @ Softech | L&D Lead Architect' : 'Open Source Developer & 3D Creator',
+                name: isPradeep ? 'Pradeep B (Created Website for Softech)' : (username.charAt(0).toUpperCase() + username.slice(1)),
+                bio: isPradeep ? 'I have created a website for Softech. If u want like this ping me' : 'Open Source Developer & 3D Creator',
                 followers: isPradeep ? 2850 : 1420,
                 public_repos: isPradeep ? 10 : 38,
                 avatar_url: `https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png`
@@ -1333,7 +1333,7 @@
             let mockRepos = [];
             if (isPradeep) {
                 mockRepos = [
-                    { name: 'Softech-Portal', stargazers_count: 520, language: 'Python', html_url: 'https://reachsoftech.onrender.com/home', description: 'Softech Web Portal - Jobs & Placement Courses (Founder: Pradeep B)' },
+                    { name: 'Softech-Portal', stargazers_count: 520, language: 'Python', html_url: 'https://reachsoftech.onrender.com/home', description: 'Softech Web Portal - Jobs & Placement Courses (Created by Pradeep B - If u want like this ping me)' },
                     { name: 'JAVA-DSA-Roadmap', stargazers_count: 890, language: 'Java', html_url: 'https://github.com/Pradeep-B28/JAVA-DSA-Roadmap' },
                     { name: 'GIT_3D_Portfolio', stargazers_count: 430, language: 'JavaScript', html_url: 'https://github.com/Pradeep-B28/GIT_3D_Portfolio' },
                     { name: 'Portfolio', stargazers_count: 380, language: 'TypeScript', html_url: 'https://github.com/Pradeep-B28/Portfolio' },
