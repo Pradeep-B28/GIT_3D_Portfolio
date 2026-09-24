@@ -63,7 +63,7 @@ Whether you want to show off your annual contribution history as a futuristic 3D
 ### Option 1: Open Locally (No Installation Needed)
 1. Download or clone this repository:
    ```bash
-   git clone https://github.com/Pradeep-B28/GIT---viz.git
+   git clone https://github.com/Pradeep-B28/GIT_3D_Portfolio.git
    ```
 2. Double-click [`index.html`](file:///C:/Git/Repo%202/git-viz/index.html) to open directly in any modern web browser.
 
