@@ -36,6 +36,12 @@ Whether you want to show off your annual contribution history as a futuristic 3D
 
 ## ⚡ Feature Highlights
 
+- 🌀 **Futuristic Glassmorphic Preloader:** Animated cyberpunk multi-ring spinner with live status updates and smooth blur reveal.
+- 🎬 **Staggered 3D Entrance Reveal:** 3D skyline skyscrapers and repo stars sprout upward dynamically with ease-out bounce animations, paired with spring-animated UI panels.
+- 🖱️ **3D Perspective Card Tilt & Glare:** Real-time mouse gyro tilt with dynamic radial glare reflections on profile cards and modal dialogs.
+- 📐 **3D Camera & Multi-Plane Parallax:** Subtly drifting 3D perspective and layered depth shifts on floating UI controls tied to cursor coordinates.
+- ✨ **Interactive 3D Hover & Scale Pop:** 3D raycast hover with mesh scale popping, emissive pulsing, click ripples, and Web Audio SFX.
+- 🌊 **Fluid Harmonic Levitation:** Sinusoidal ocean-swell floating on archipelago islands, orbiting galaxy stars, and spinning golden obelisk monuments.
 - 🚶 **WASD Drone Street View:** Press **`🚶 Drone`** to enter ground-level flight controls (**WASD** to move, **Q/E** to adjust altitude, mouse drag to look around).
 - ✨ **Three.js Post-Processing Bloom:** Built-in `UnrealBloomPass` shader for neon glows on rooftop antennas, lasers, and spires.
 - 🎶 **Melodic Code Synthesizer:** Procedural Web Audio API synth playing harmonic scale arpeggios as the 12-month timeline builds.
