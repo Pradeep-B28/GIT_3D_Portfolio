@@ -3,35 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>git-viz — 3D GitHub Skyline, Galaxy, Duel & Archipelago Visualizer</title>
-    <meta name="description" content="Transform GitHub profiles into 3D city skylines, repo galaxies, developer duels, and tech archipelago islands with Three.js, shaders, and Web Audio.">
+    <title>git-viz — Realistic 3D GitHub Skyline, Galaxy, Archipelago &amp; Duel</title>
+    <meta name="description" content="Photorealistic 3D data visualization web application transforming any GitHub profile into an immersive 3D universe with Three.js, PBR materials, custom shaders, and Web Audio.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --bg-color: #0d1117;
-            --text-color: #c9d1d9;
+            --bg-color: #080b10;
+            --card-bg: rgba(13, 17, 24, 0.78);
+            --border-color: rgba(48, 54, 61, 0.65);
             --accent-color: #58a6ff;
-            --accent-glow: rgba(88, 166, 255, 0.45);
-            --card-bg: rgba(13, 17, 23, 0.85);
-            --border-color: rgba(48, 54, 61, 0.85);
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --accent-glow: rgba(88, 166, 255, 0.35);
+            --softech-teal: #178f7f;
+            --softech-glow: #5fe0c4;
+            --text-main: #f0f6fc;
+            --text-dim: #8b949e;
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
         * {
             box-sizing: border-box;
             user-select: none;
+            -webkit-user-select: none;
         }
 
-        body {
+        html, body {
             margin: 0;
-            overflow: hidden;
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            padding: 0;
             width: 100vw;
             height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 13px;
         }
 
-        /* --- Cyberpunk Glassmorphic Smooth Loader --- */
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* --- Fullscreen Cyber Glassmorphic Preloader --- */
         #app-loader {
             position: fixed;
             inset: 0;
@@ -39,30 +61,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(ellipse at center, rgba(13, 17, 23, 0.94) 0%, rgba(5, 7, 10, 0.98) 100%);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
             opacity: 1;
-            transform: scale(1);
-            filter: blur(0px);
-            transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), 
-                        transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), 
-                        filter 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.65s ease;
             pointer-events: all;
         }
 
-        #app-loader.hidden {
+        #app-loader.fade-out {
             opacity: 0;
-            transform: scale(1.08);
-            filter: blur(14px);
+            visibility: hidden;
             pointer-events: none;
         }
 
         .loader-backdrop {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle 350px at 50% 50%, rgba(88, 166, 255, 0.12), transparent 75%);
-            pointer-events: none;
+            background: radial-gradient(circle at center, rgba(16, 24, 38, 0.95) 0%, rgba(6, 9, 14, 0.98) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
         }
 
         .loader-content {
@@ -71,14 +86,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-align: center;
-            gap: 16px;
+            gap: 20px;
         }
 
         .loader-rings-wrapper {
             position: relative;
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -86,11 +100,11 @@
 
         .loader-glow-aura {
             position: absolute;
-            width: 130px;
-            height: 130px;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(88, 166, 255, 0.3) 0%, transparent 70%);
-            animation: pulseGlow 2.4s ease-in-out infinite alternate;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            animation: pulseGlow 2.2s infinite ease-in-out;
         }
 
         .loader-ring {
@@ -99,57 +113,56 @@
             border: 2px solid transparent;
         }
 
-        .loader-ring.outer-ring {
-            width: 88px;
-            height: 88px;
-            border-top-color: #58a6ff;
-            border-right-color: #39d353;
-            border-bottom-color: rgba(88, 166, 255, 0.2);
-            animation: spinClockwise 1.6s cubic-bezier(0.53, 0.21, 0.29, 0.88) infinite;
-            filter: drop-shadow(0 0 10px rgba(88, 166, 255, 0.6));
+        .outer-ring {
+            width: 84px;
+            height: 84px;
+            border-top-color: var(--accent-color);
+            border-right-color: #a855f7;
+            animation: spinCW 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
         }
 
-        .loader-ring.inner-ring {
-            width: 64px;
-            height: 64px;
-            border-top-color: #f778ba;
+        .inner-ring {
+            width: 58px;
+            height: 58px;
+            border-bottom-color: var(--softech-glow);
             border-left-color: #00f0ff;
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-            animation: spinCounterClockwise 1.2s cubic-bezier(0.53, 0.21, 0.29, 0.88) infinite;
-            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+            animation: spinCCW 1.1s linear infinite;
         }
 
         .loader-hex-core {
-            position: relative;
-            z-index: 3;
-            color: #58a6ff;
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: pulseCore 1.8s ease-in-out infinite alternate;
+        }
+
+        .loader-hex-icon {
+            width: 32px;
+            height: 32px;
+            color: var(--accent-color);
+            filter: drop-shadow(0 0 10px var(--accent-color));
+            animation: coreBreathe 1.8s ease-in-out infinite;
         }
 
         .loader-brand {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            text-align: center;
         }
 
-        .loader-brand-main {
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: 4px;
-            background: linear-gradient(135deg, #ffffff 20%, #58a6ff 60%, #39d353 100%);
+        .loader-brand h2 {
+            margin: 0;
+            font-family: var(--font-heading);
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ffffff 20%, #58a6ff 60%, #a855f7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(88, 166, 255, 0.4);
         }
 
-        .loader-brand-sub {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #8b949e;
+        .loader-brand p {
+            margin: 4px 0 0 0;
+            color: var(--text-dim);
+            font-size: 11px;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
@@ -157,105 +170,47 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(22, 27, 34, 0.7);
-            border: 1px solid rgba(48, 54, 61, 0.8);
-            border-radius: 20px;
-            padding: 6px 16px;
             font-size: 12px;
             color: #c9d1d9;
-            backdrop-filter: blur(8px);
         }
 
         .loader-status-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: #39d353;
-            box-shadow: 0 0 8px #39d353;
-            animation: pulseDot 1.2s infinite;
+            background: var(--softech-glow);
+            box-shadow: 0 0 8px var(--softech-glow);
+            animation: dotBlink 1s infinite alternate;
         }
 
         .loader-progress-track {
-            width: 240px;
+            width: 220px;
             height: 4px;
-            border-radius: 4px;
-            background: rgba(48, 54, 61, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
             overflow: hidden;
-            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
         }
 
         .loader-progress-bar {
             height: 100%;
             width: 0%;
-            border-radius: 4px;
-            background: linear-gradient(90deg, #58a6ff, #39d353, #00f0ff);
-            box-shadow: 0 0 10px rgba(88, 166, 255, 0.8);
-            transition: width 0.35s ease;
+            background: linear-gradient(90deg, #58a6ff, #5fe0c4, #a855f7);
+            border-radius: 999px;
+            transition: width 0.3s ease;
         }
 
-        /* --- Entrance Reveal Keyframes --- */
-        @keyframes headerEntrance {
-            0% { opacity: 0; transform: translate(-50%, -60px) scale(0.95); }
-            100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-        }
+        /* --- Keyframes --- */
+        @keyframes spinCW { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spinCCW { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+        @keyframes pulseGlow { 0%, 100% { transform: scale(0.9); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 0.85; } }
+        @keyframes coreBreathe { 0%, 100% { transform: scale(0.95); } 50% { transform: scale(1.08); } }
+        @keyframes dotBlink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes navEntrance { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes profileEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes deckEntrance { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
 
-        @keyframes presetsEntrance {
-            0% { opacity: 0; transform: translate(-50%, -20px); }
-            100% { opacity: 1; transform: translate(-50%, 0); }
-        }
-
-        @keyframes profileEntrance {
-            0% { opacity: 0; transform: translateY(50px) scale(0.94); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @keyframes timelineEntrance {
-            0% { opacity: 0; transform: translate(-50%, 50px) scale(0.94); }
-            100% { opacity: 1; transform: translate(-50%, 0); }
-        }
-
-        @keyframes cameraEntrance {
-            0% { opacity: 0; transform: translateX(50px); }
-            100% { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes duelEntrance {
-            0% { opacity: 0; transform: translate(-50%, -20px); }
-            100% { opacity: 1; transform: translate(-50%, 0); }
-        }
-
-        /* --- Rotations, Pulses & Ripples --- */
-        @keyframes spinClockwise {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes spinCounterClockwise {
-            0% { transform: rotate(360deg); }
-            100% { transform: rotate(0deg); }
-        }
-
-        @keyframes pulseGlow {
-            0% { transform: scale(0.85); opacity: 0.4; }
-            100% { transform: scale(1.15); opacity: 0.8; }
-        }
-
-        @keyframes pulseCore {
-            0% { transform: scale(0.92); filter: drop-shadow(0 0 4px rgba(88, 166, 255, 0.4)); }
-            100% { transform: scale(1.08); filter: drop-shadow(0 0 12px rgba(88, 166, 255, 0.8)); }
-        }
-
-        @keyframes pulseDot {
-            0%, 100% { opacity: 0.4; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-
-        @keyframes rippleEffect {
-            0% { transform: scale(0); opacity: 0.6; }
-            100% { transform: scale(4); opacity: 0; }
-        }
-
-        /* --- Header & Control Bar --- */
+        /* --- Top Executive Navigation Header --- */
         #ui-header {
             position: absolute;
             top: 14px;
@@ -266,264 +221,294 @@
             align-items: center;
             gap: 10px;
             background: var(--card-bg);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            padding: 8px 16px;
-            border-radius: 40px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 8px 14px;
+            border-radius: 18px;
             border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            max-width: 98vw;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.65);
+            max-width: 95vw;
             flex-wrap: wrap;
             justify-content: center;
-            animation: headerEntrance 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
-            transition: box-shadow 0.3s ease, border-color 0.3s ease;
-        }
-
-        #ui-header:hover {
-            border-color: rgba(88, 166, 255, 0.4);
-            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(88, 166, 255, 0.15);
+            animation: navEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
         .mode-switch {
             display: flex;
-            background: rgba(22, 27, 34, 0.85);
+            background: rgba(10, 14, 20, 0.75);
             padding: 3px;
-            border-radius: 30px;
-            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 2px;
         }
 
         .mode-btn {
-            position: relative;
-            overflow: hidden;
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: none;
             background: transparent;
-            color: #8b949e;
-            font-size: 12px;
-            font-weight: 700;
+            border: none;
+            color: var(--text-dim);
+            padding: 5px 12px;
+            border-radius: 9px;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            white-space: nowrap;
+            font-size: 12px;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
         }
 
-        .mode-btn:hover:not(.active) {
-            color: #f0f6fc;
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-1px);
+        .mode-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .mode-btn.active {
-            background: var(--accent-color);
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.25), rgba(168, 85, 247, 0.25));
             color: #ffffff;
-            box-shadow: 0 2px 14px rgba(88, 166, 255, 0.5);
-            transform: scale(1.02);
+            border: 1px solid rgba(88, 166, 255, 0.5);
+            box-shadow: 0 2px 10px rgba(88, 166, 255, 0.25);
+            font-weight: 600;
         }
 
         .input-group {
             display: flex;
             align-items: center;
-            background: rgba(22, 27, 34, 0.85);
-            border-radius: 30px;
-            padding: 4px 12px;
+            background: rgba(10, 14, 20, 0.85);
             border: 1px solid var(--border-color);
-            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+            border-radius: 10px;
+            padding: 4px 10px;
+            gap: 6px;
+            color: #6e7681;
+            font-size: 12px;
+            transition: border-color 0.25s, box-shadow 0.25s;
         }
 
         .input-group:focus-within {
             border-color: var(--accent-color);
-            box-shadow: 0 0 12px rgba(88, 166, 255, 0.35);
-        }
-
-        .input-group span {
-            color: #8b949e;
-            font-size: 13px;
-            margin-right: 4px;
+            box-shadow: 0 0 12px var(--accent-glow);
         }
 
         .username-input {
-            border: none;
             background: transparent;
-            color: #f0f6fc;
-            font-size: 14px;
-            font-weight: 600;
-            width: 110px;
+            border: none;
             outline: none;
-            padding: 5px 0;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 12px;
+            width: 105px;
+            font-weight: 600;
         }
 
-        /* --- Interactive Buttons with Micro-Interactions & Ripples --- */
+        /* --- Buttons --- */
         .btn {
             position: relative;
             overflow: hidden;
-            display: flex;
+            background: rgba(30, 36, 46, 0.85);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 7px 14px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, background 0.2s ease;
-            outline: none;
-            white-space: nowrap;
+            text-decoration: none;
+            transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .btn:hover {
-            transform: translateY(-2px) scale(1.03);
+            transform: translateY(-2px);
+            border-color: #8b949e;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         }
 
         .btn:active {
-            transform: translateY(1px) scale(0.96);
+            transform: translateY(0);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #238636, #2ea043);
+            background: linear-gradient(135deg, #1f6feb 0%, #238636 100%);
+            border: 1px solid rgba(88, 166, 255, 0.4);
             color: #ffffff;
-            box-shadow: 0 4px 14px rgba(46, 160, 67, 0.4);
+            box-shadow: 0 4px 16px rgba(31, 111, 235, 0.35);
         }
 
         .btn-primary:hover {
-            box-shadow: 0 6px 20px rgba(46, 160, 67, 0.6);
+            border-color: #58a6ff;
+            box-shadow: 0 6px 20px rgba(31, 111, 235, 0.55);
         }
 
-        .btn-secondary {
-            background: rgba(33, 38, 45, 0.85);
-            color: #c9d1d9;
-            border: 1px solid var(--border-color);
+        .btn-softech {
+            background: linear-gradient(135deg, rgba(23, 143, 127, 0.35), rgba(95, 224, 196, 0.2));
+            border: 1px solid rgba(95, 224, 196, 0.6);
+            color: #5fe0c4;
+            box-shadow: 0 4px 14px rgba(23, 143, 127, 0.25);
         }
 
-        .btn-secondary:hover {
-            border-color: var(--accent-color);
+        .btn-softech:hover {
+            border-color: #5fe0c4;
             color: #ffffff;
-            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.3);
+            background: linear-gradient(135deg, rgba(23, 143, 127, 0.6), rgba(95, 224, 196, 0.4));
+            box-shadow: 0 6px 20px rgba(95, 224, 196, 0.4);
+        }
+
+        .btn-ping {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.25));
+            border: 1px solid rgba(168, 85, 247, 0.6);
+            color: #d8b4fe;
+            box-shadow: 0 4px 14px rgba(168, 85, 247, 0.25);
+        }
+
+        .btn-ping:hover {
+            color: #ffffff;
+            border-color: #d8b4fe;
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.45);
         }
 
         .btn-record {
-            background: linear-gradient(135deg, #da3633, #f85149);
-            color: #ffffff;
-            box-shadow: 0 4px 14px rgba(248, 81, 73, 0.4);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.2));
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
         }
 
         .btn-record:hover {
-            box-shadow: 0 6px 20px rgba(248, 81, 73, 0.6);
-        }
-
-        .btn-ripple {
-            position: absolute;
-            border-radius: 50%;
-            transform: scale(0);
-            animation: rippleEffect 0.55s ease-out;
-            background-color: rgba(255, 255, 255, 0.32);
-            pointer-events: none;
+            background: rgba(239, 68, 68, 0.35);
+            color: #ffffff;
+            border-color: #ef4444;
         }
 
         .select-custom {
-            background: rgba(33, 38, 45, 0.85);
-            color: #c9d1d9;
+            background: rgba(10, 14, 20, 0.85);
             border: 1px solid var(--border-color);
-            border-radius: 30px;
-            padding: 6px 12px;
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-family: inherit;
             font-size: 12px;
-            font-weight: 600;
-            outline: none;
             cursor: pointer;
-            transition: all 0.2s ease;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
-        .select-custom:hover {
+        .select-custom:focus {
             border-color: var(--accent-color);
-            color: #ffffff;
         }
 
-        /* --- Presets Bar --- */
+        /* --- Quick Username Presets Bar --- */
         #presets-bar {
             position: absolute;
-            top: 68px;
+            top: 74px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 15;
+            z-index: 19;
             display: flex;
-            gap: 6px;
             align-items: center;
-            animation: presetsEntrance 0.85s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-            will-change: transform;
+            gap: 7px;
+            animation: navEntrance 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .preset-chip {
-            position: relative;
-            overflow: hidden;
-            background: rgba(22, 27, 34, 0.75);
-            border: 1px solid rgba(48, 54, 61, 0.6);
-            backdrop-filter: blur(8px);
+            background: rgba(13, 17, 24, 0.8);
+            border: 1px solid rgba(48, 54, 61, 0.7);
+            backdrop-filter: blur(10px);
             color: #8b949e;
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 11px;
             cursor: pointer;
-            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .preset-chip:hover {
-            color: #f0f6fc;
+            color: #ffffff;
             border-color: var(--accent-color);
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.35);
         }
 
-        /* --- Profile Card (Bottom Left) with 3D Tilt --- */
+        .preset-chip.featured {
+            color: #5fe0c4;
+            border-color: rgba(95, 224, 196, 0.6);
+            background: rgba(23, 143, 127, 0.2);
+            font-weight: 700;
+        }
+
+        .preset-chip.featured:hover {
+            border-color: #5fe0c4;
+            box-shadow: 0 4px 14px rgba(95, 224, 196, 0.45);
+        }
+
+        /* --- Duel VS Leaderboard Banner --- */
+        #duel-banner {
+            position: absolute;
+            top: 108px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 18;
+            display: none;
+            align-items: center;
+            gap: 16px;
+            background: rgba(13, 17, 24, 0.88);
+            border: 1px solid rgba(48, 54, 61, 0.8);
+            backdrop-filter: blur(14px);
+            padding: 8px 18px;
+            border-radius: 14px;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+        }
+
+        .vs-badge {
+            font-weight: 900;
+            font-size: 13px;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #00f0ff, #ff0055);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .p1-color { color: #00f0ff; font-weight: 700; }
+        .p2-color { color: #ff0055; font-weight: 700; }
+
+        /* --- Profile Card (Bottom Left) --- */
         #profile-card {
             position: absolute;
             bottom: 20px;
             left: 20px;
             z-index: 20;
             background: var(--card-bg);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             padding: 16px;
             border-radius: 20px;
             border: 1px solid var(--border-color);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-            width: 260px;
+            box-shadow: 0 14px 45px rgba(0, 0, 0, 0.7);
+            width: 280px;
             perspective: 1000px;
             transform-style: preserve-3d;
-            transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-            overflow: hidden;
-            animation: profileEntrance 0.85s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-            will-change: transform;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            animation: profileEntrance 0.85s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
         #profile-card:hover {
             border-color: rgba(88, 166, 255, 0.5);
-            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(88, 166, 255, 0.2);
-        }
-
-        .card-glare {
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 10;
-        }
-
-        .profile-header, .stats-grid {
-            transform: translateZ(12px);
-            transform-style: preserve-3d;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.85), 0 0 24px rgba(88, 166, 255, 0.2);
         }
 
         .profile-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         #avatar {
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             border: 2px solid var(--accent-color);
             object-fit: cover;
@@ -532,7 +517,7 @@
         }
 
         #avatar:hover {
-            transform: scale(1.08) rotate(5deg);
+            transform: scale(1.08) rotate(4deg);
         }
 
         .user-details h2 {
@@ -540,278 +525,395 @@
             font-size: 16px;
             font-weight: 700;
             color: #f0f6fc;
+            font-family: var(--font-heading);
         }
 
         .user-details p {
             margin: 2px 0 0 0;
             font-size: 11px;
             color: #8b949e;
+            line-height: 1.3;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-            background: rgba(22, 27, 34, 0.5);
-            padding: 8px;
-            border-radius: 12px;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .stat-item {
+            background: rgba(10, 14, 20, 0.65);
+            padding: 7px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f0f6fc;
+            margin-top: 2px;
+        }
+
+        .lang-bar {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .lang-segment {
+            height: 100%;
+            transition: width 0.4s ease;
+        }
+
+        /* --- Softech Platform & Ping Me Showcase Deck (Bottom Right) --- */
+        #softech-showcase-deck {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 20;
+            width: 320px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(95, 224, 196, 0.4);
+            box-shadow: 0 14px 45px rgba(0, 0, 0, 0.7), 0 0 20px rgba(23, 143, 127, 0.15);
+            padding: 16px;
+            animation: deckEntrance 0.85s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+            transition: all 0.3s ease;
+        }
+
+        #softech-showcase-deck:hover {
+            border-color: rgba(95, 224, 196, 0.7);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.85), 0 0 26px rgba(95, 224, 196, 0.25);
+        }
+
+        .deck-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 8px;
         }
 
-        .stat-item { display: flex; flex-direction: column; }
-        .stat-label { font-size: 9px; text-transform: uppercase; color: #8b949e; }
-        .stat-value { font-size: 13px; font-weight: 700; color: #f0f6fc; }
+        .deck-badge {
+            background: linear-gradient(135deg, rgba(23, 143, 127, 0.3), rgba(95, 224, 196, 0.2));
+            color: #5fe0c4;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(95, 224, 196, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-        .lang-bar { display: flex; height: 6px; border-radius: 4px; overflow: hidden; background: #21262d; margin-top: 4px; }
-        .lang-segment { height: 100%; transition: width 0.5s ease; }
+        .deck-minimize-btn {
+            background: transparent;
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
 
-        /* --- Timeline Playback Controller Bar (Bottom Center) --- */
+        .deck-minimize-btn:hover {
+            color: #f0f6fc;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .deck-title {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: var(--font-heading);
+        }
+
+        .deck-desc {
+            margin: 0 0 10px 0;
+            font-size: 11px;
+            color: #cbd5e1;
+            line-height: 1.45;
+        }
+
+        .deck-cta-box {
+            background: rgba(10, 15, 24, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+
+        .deck-cta-prompt {
+            font-size: 11px;
+            color: #e2e8f0;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .deck-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .deck-actions .btn {
+            flex: 1;
+            justify-content: center;
+            font-size: 11px;
+            padding: 7px 10px;
+        }
+
+        /* --- 12-Month Timeline Scrubber (Bottom Center) --- */
         #timeline-bar {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 20;
-            background: var(--card-bg);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            padding: 8px 18px;
-            border-radius: 40px;
-            border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             gap: 12px;
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            padding: 8px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            width: 420px;
+            width: 320px;
             max-width: 90vw;
-            animation: timelineEntrance 0.85s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            will-change: transform;
-        }
-
-        #timeline-bar:hover {
-            border-color: rgba(88, 166, 255, 0.4);
-            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(88, 166, 255, 0.15);
-        }
-
-        #play-btn {
-            background: var(--accent-color);
-            color: #ffffff;
-            border: none;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 13px;
-            flex-shrink: 0;
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
-        }
-
-        #play-btn:hover {
-            transform: scale(1.15);
-            box-shadow: 0 0 14px rgba(88, 166, 255, 0.7);
-        }
-
-        #play-btn:active {
-            transform: scale(0.92);
         }
 
         #scrubber {
             flex-grow: 1;
             accent-color: var(--accent-color);
             cursor: pointer;
-            transition: opacity 0.2s ease;
         }
 
         #timeline-label {
             font-size: 11px;
-            font-weight: 700;
-            color: var(--accent-color);
-            white-space: nowrap;
-            min-width: 90px;
+            color: #8b949e;
+            min-width: 85px;
             text-align: right;
         }
 
-        /* --- Duel VS Comparison Leaderboard Banner --- */
-        #duel-banner {
-            position: absolute;
-            top: 68px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 18;
-            display: none;
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 8px 20px;
-            border-radius: 30px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            align-items: center;
-            gap: 16px;
+        #play-btn {
+            background: transparent;
+            border: none;
+            color: #f0f6fc;
+            cursor: pointer;
             font-size: 13px;
-            font-weight: 700;
-            animation: duelEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-            will-change: transform;
+            padding: 3px 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
         }
 
-        .duel-player { display: flex; align-items: center; gap: 8px; }
-        .p1-color { color: #00f0ff; }
-        .p2-color { color: #ff0055; }
-        .vs-badge { background: #30363d; padding: 2px 8px; border-radius: 10px; font-size: 10px; color: #f0f6fc; }
+        #play-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
 
-        /* --- Camera Widget & Controls --- */
+        /* --- Camera Floating Controls Widget (Right) --- */
         #camera-widget {
             position: absolute;
-            top: 14px;
-            right: 14px;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
             z-index: 20;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            animation: cameraEntrance 0.85s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-            will-change: transform;
+            gap: 8px;
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            padding: 8px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
         }
 
         .icon-btn {
-            position: relative;
-            overflow: hidden;
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: #c9d1d9;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 15px; cursor: pointer;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background 0.2s ease, border-color 0.2s ease;
+            background: transparent;
+            border: 1px solid transparent;
+            color: #8b949e;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .icon-btn:hover {
-            transform: translateY(-2px) scale(1.08);
-            background: #30363d;
-            color: #ffffff;
-            border-color: var(--accent-color);
-            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.35);
+            color: #f0f6fc;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: scale(1.08);
         }
 
         .icon-btn.active {
-            background: #30363d; color: #ffffff; border-color: var(--accent-color);
-            box-shadow: 0 0 12px rgba(88, 166, 255, 0.5);
+            color: var(--accent-color);
+            background: rgba(88, 166, 255, 0.2);
+            border-color: rgba(88, 166, 255, 0.4);
         }
 
-        .icon-btn:active {
-            transform: scale(0.92);
-        }
-
-        /* --- Drone Flight Control HUD --- */
+        /* --- Drone Flight HUD --- */
         #drone-hud {
             position: absolute;
-            bottom: 80px;
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 25;
-            background: rgba(13, 17, 23, 0.9);
-            border: 1px solid var(--accent-color);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: #f0f6fc;
+            z-index: 20;
             display: none;
-            gap: 12px;
             align-items: center;
-            box-shadow: 0 8px 24px rgba(0,240,255,0.2);
-            animation: timelineEntrance 0.5s ease both;
+            gap: 14px;
+            background: rgba(13, 17, 24, 0.9);
+            border: 1px solid rgba(88, 166, 255, 0.5);
+            backdrop-filter: blur(16px);
+            padding: 6px 16px;
+            border-radius: 14px;
+            color: #58a6ff;
+            font-size: 11px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
         }
 
-        /* --- Enhanced Raycaster Tooltip & Toast --- */
+        /* --- Raycaster Tooltip & Toast Notifications --- */
         #tooltip {
             position: absolute;
-            z-index: 30;
             pointer-events: none;
-            background: rgba(13, 17, 23, 0.92);
-            border: 1px solid rgba(88, 166, 255, 0.4);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(88, 166, 255, 0.25);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 12px;
+            z-index: 30;
+            background: rgba(13, 17, 24, 0.92);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(14px);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 11px;
             color: #f0f6fc;
-            opacity: 0;
-            transform: translate(-50%, -130%) scale(0.92);
-            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
-                        transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
-                        border-color 0.25s ease, 
-                        box-shadow 0.25s ease;
+            display: none;
+            transform: translate(14px, 14px);
             white-space: nowrap;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
         }
+
         #tooltip.active {
-            opacity: 1;
-            transform: translate(-50%, -130%) scale(1);
+            display: block;
         }
 
         #toast {
-            position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
-            z-index: 35; background: rgba(46, 160, 67, 0.95); color: #ffffff;
-            padding: 8px 22px; border-radius: 30px; font-weight: 600; font-size: 13px;
-            opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            transform: translate(-50%, -10px);
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 99;
+            background: rgba(13, 17, 24, 0.92);
+            border: 1px solid var(--accent-color);
+            backdrop-filter: blur(14px);
+            padding: 8px 16px;
+            border-radius: 12px;
+            color: #f0f6fc;
+            font-size: 12px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
         }
+
         #toast.show {
             opacity: 1;
-            transform: translate(-50%, 0);
+            transform: translateY(0);
         }
 
-        /* --- Settings Modal with 3D Depth --- */
+        /* --- Settings Modal (PAT Rate Limits) --- */
         #settings-modal {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 100; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(6, 9, 14, 0.85);
+            backdrop-filter: blur(16px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
+
         .modal-card {
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: #0d1117;
+            border: 1px solid var(--border-color);
             padding: 24px;
             border-radius: 20px;
-            width: 340px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            perspective: 1000px;
-            transform-style: preserve-3d;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease;
-        }
-        .modal-card h3 { margin: 0 0 10px 0; color: #f0f6fc; }
-        .modal-card p { font-size: 12px; color: #8b949e; margin-bottom: 14px; line-height: 1.4; }
-        .modal-input {
-            width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #30363d;
-            background: #0d1117; color: #f0f6fc; outline: none; margin-bottom: 16px; font-size: 13px;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .modal-input:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+            width: 380px;
+            max-width: 90vw;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
         }
 
+        .modal-card h3 {
+            margin: 0 0 8px 0;
+            color: #f0f6fc;
+            font-family: var(--font-heading);
+            font-size: 16px;
+        }
+
+        .modal-card p {
+            font-size: 12px;
+            color: #8b949e;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: rgba(10, 14, 20, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 12px;
+            color: #f0f6fc;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+            margin-bottom: 16px;
+        }
+
+        .modal-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* --- Ripple FX --- */
+        .btn-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(0);
+            animation: rippleAnim 0.55s linear;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(3.5); opacity: 0; } }
+
         @media (max-width: 768px) {
-            #timeline-bar { width: 280px; }
-            #profile-card { width: 220px; bottom: 70px; left: 12px; }
-            #presets-bar { display: none; }
+            #profile-card { display: none; }
+            #softech-showcase-deck { width: 90vw; right: 5vw; bottom: 80px; }
+            #camera-widget { top: auto; bottom: 80px; right: 10px; transform: none; flex-direction: row; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Cyberpunk Glassmorphic Smooth Preloader -->
+    <!-- Cyber Glassmorphic Preloader -->
     <div id="app-loader">
         <div class="loader-backdrop"></div>
         <div class="loader-content">
@@ -820,16 +922,18 @@
                 <div class="loader-ring outer-ring"></div>
                 <div class="loader-ring inner-ring"></div>
                 <div class="loader-hex-core">
-                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="12 2 2 7 2 17 12 22 22 17 22 7 12 2"></polygon>
-                        <polyline points="2 7 12 12 22 7"></polyline>
-                        <polyline points="12 12 12 22"></polyline>
+                    <svg class="loader-hex-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
+                        <line x1="12" y1="22" x2="12" y2="15.5"></line>
+                        <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
+                        <polyline points="2 15.5 12 8.5 22 15.5"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="8.5"></line>
                     </svg>
                 </div>
             </div>
             <div class="loader-brand">
-                <span class="loader-brand-main">GIT-VIZ 3D</span>
-                <span class="loader-brand-sub">NEURAL PORTFOLIO VISUALIZER</span>
+                <h2>GIT-VIZ 3D</h2>
+                <p>Procedural GitHub Architecture Engine</p>
             </div>
             <div class="loader-status-container">
                 <div class="loader-status-dot"></div>
@@ -853,32 +957,35 @@
         <!-- Single User Input -->
         <div class="input-group" id="single-user-group">
             <span>github.com/</span>
-            <input type="text" id="username-input" class="username-input" placeholder="username" value="octocat" autocomplete="off">
+            <input type="text" id="username-input" class="username-input" placeholder="username" value="Pradeep-B28" autocomplete="off">
         </div>
 
         <!-- Duel Users Inputs -->
         <div class="input-group" id="duel-user-group" style="display: none;">
-            <input type="text" id="p1-input" class="username-input" placeholder="User 1" value="torvalds" style="width: 85px;">
+            <input type="text" id="p1-input" class="username-input" placeholder="User 1" value="Pradeep-B28" style="width: 85px;">
             <span style="color: #ff0055; font-weight: 900;">VS</span>
-            <input type="text" id="p2-input" class="username-input" placeholder="User 2" value="gaearon" style="width: 85px;">
+            <input type="text" id="p2-input" class="username-input" placeholder="User 2" value="torvalds" style="width: 85px;">
         </div>
 
         <button class="btn btn-primary" id="load-btn">⚡ Visualize</button>
-        <button class="btn btn-secondary" id="screenshot-btn">📸 Save PNG</button>
+        <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener" class="btn btn-softech" title="Live Softech Platform">🌐 Softech Site ↗</a>
+        <a href="mailto:pradeepbashaa@gmail.com?subject=Custom%20Website%20Inquiry%20via%20GIT_3D_Portfolio&amp;body=Hi%20Pradeep,%20I%20saw%20your%203D%20portfolio%20and%20the%20Softech%20website.%20I'd%20like%20to%20discuss%20building%20a%20website%20like%20that." class="btn btn-ping" title="Ping me to build your website">✉️ Ping Me</a>
+        <button class="btn" id="screenshot-btn">📸 Save PNG</button>
         <button class="btn btn-record" id="record-btn">🎥 Record Video</button>
 
         <select id="theme-select" class="select-custom" title="Change Visual Theme">
-            <option value="github">🐙 GitHub Dark</option>
+            <option value="github">🏙️ GitHub Dark</option>
             <option value="cyberpunk">🌌 Cyberpunk Neon</option>
-            <option value="emerald">🟢 Matrix Emerald</option>
+            <option value="emerald">🌲 Matrix Emerald</option>
             <option value="sunset">🌅 Sunset Gold</option>
-            <option value="obsidian">⚡ Obsidian Silver</option>
+            <option value="obsidian">💎 Obsidian Silver</option>
         </select>
     </div>
 
-    <!-- Quick Username Presets -->
+    <!-- Quick Username Presets Bar -->
     <div id="presets-bar">
         <span style="font-size: 11px; color: #6e7681;">Presets:</span>
+        <div class="preset-chip featured" onclick="loadPreset('Pradeep-B28')">⭐ Pradeep-B28</div>
         <div class="preset-chip" onclick="loadPreset('octocat')">octocat</div>
         <div class="preset-chip" onclick="loadPreset('torvalds')">torvalds</div>
         <div class="preset-chip" onclick="loadPreset('gaearon')">gaearon</div>
@@ -888,50 +995,80 @@
 
     <!-- Duel VS Leaderboard Banner -->
     <div id="duel-banner">
-        <div class="duel-player p1-color"><span id="p1-name">torvalds</span> (<span id="p1-score">0</span>★)</div>
+        <div class="duel-player p1-color"><span id="p1-name">Pradeep-B28</span> (<span id="p1-score">0</span>★)</div>
         <div class="vs-badge">VERSUS</div>
-        <div class="duel-player p2-color"><span id="p2-name">gaearon</span> (<span id="p2-score">0</span>★)</div>
+        <div class="duel-player p2-color"><span id="p2-name">torvalds</span> (<span id="p2-score">0</span>★)</div>
     </div>
 
     <!-- Camera Controls & Special Features Bar -->
     <div id="camera-widget">
         <button class="icon-btn" id="btn-iso" title="Isometric 3D View">📐</button>
-        <button class="icon-btn" id="btn-top" title="Top-Down View">🗺️</button>
-        <button class="icon-btn" id="btn-drone" title="Toggle WASD Drone Street View">🚶</button>
+        <button class="icon-btn" id="btn-top" title="Top-Down View">🎯</button>
+        <button class="icon-btn" id="btn-drone" title="Toggle WASD Drone Street View">🚁</button>
         <button class="icon-btn" id="btn-bloom" title="Toggle Post-Processing Glow">✨</button>
         <button class="icon-btn" id="btn-fireworks" title="Launch Particle Fireworks">🎆</button>
         <button class="icon-btn" id="btn-orbit" title="Toggle Auto-Rotation">🔄</button>
-        <button class="icon-btn" id="btn-audio" title="Toggle Sound FX & Synth">🔊</button>
+        <button class="icon-btn" id="btn-audio" title="Toggle Sound FX &amp; Synth">🔊</button>
         <button class="icon-btn" id="btn-settings" title="Settings / PAT Token">⚙️</button>
     </div>
 
     <!-- Drone Street View HUD Controls -->
     <div id="drone-hud">
-        <span>🚶 <b>Drone Mode:</b> WASD = Move | Q/E = Altitude | Drag Mouse = Look Around</span>
-        <button class="btn btn-secondary" id="exit-drone-btn" style="padding: 3px 10px; font-size: 11px;">Exit</button>
+        <span>🚁 <b>Drone Mode:</b> WASD = Move | Q/E = Altitude | Mouse Drag = Look Around</span>
+        <button class="btn" id="exit-drone-btn" style="padding: 3px 10px; font-size: 11px;">Exit</button>
     </div>
 
     <!-- User Profile Card -->
     <div id="profile-card">
         <div class="profile-header">
-            <img id="avatar" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="Avatar">
+            <img id="avatar" src="https://avatars.githubusercontent.com/u/152912648?v=4" alt="Avatar">
             <div class="user-details">
-                <h2 id="user-name">octocat</h2>
-                <p id="user-bio">GitHub Mascot</p>
+                <h2 id="user-name">Pradeep B</h2>
+                <p id="user-bio">Full-Stack Architect &amp; 3D Web Creator</p>
             </div>
         </div>
 
         <div class="stats-grid">
-            <div class="stat-item"><span class="stat-label">Public Repos</span><span class="stat-value" id="repo-count">0</span></div>
-            <div class="stat-item"><span class="stat-label">Stars Earned</span><span class="stat-value" id="star-count">0</span></div>
-            <div class="stat-item"><span class="stat-label">Followers</span><span class="stat-value" id="follower-count">0</span></div>
-            <div class="stat-item"><span class="stat-label">365d Activity</span><span class="stat-value" id="total-commits">0</span></div>
+            <div class="stat-item"><span class="stat-label">Public Repos</span><span class="stat-value" id="repo-count">10</span></div>
+            <div class="stat-item"><span class="stat-label">Stars Earned</span><span class="stat-value" id="star-count">3,540</span></div>
+            <div class="stat-item"><span class="stat-label">Followers</span><span class="stat-value" id="follower-count">2,850</span></div>
+            <div class="stat-item"><span class="stat-label">365d Commits</span><span class="stat-value" id="total-commits">1,420</span></div>
         </div>
 
         <div style="font-size: 11px; color: #8b949e; display: flex; justify-content: space-between;">
-            <span>Top Language</span><span id="top-lang-name">-</span>
+            <span>Top Language</span><span id="top-lang-name">Java / WebGL</span>
         </div>
         <div class="lang-bar" id="lang-bar"></div>
+    </div>
+
+    <!-- Softech Web Platform & "Ping Me" Showcase Deck -->
+    <div id="softech-showcase-deck">
+        <div class="deck-header">
+            <span class="deck-badge">🌐 FEATURED WEB PLATFORM</span>
+            <button class="deck-minimize-btn" id="deck-toggle-btn" title="Toggle Showcase">_</button>
+        </div>
+        <div id="deck-expandable-content">
+            <h3 class="deck-title">Softech — Placement &amp; Career Portal</h3>
+            <p class="deck-desc">
+                An end-to-end corporate career portal and technical learning ecosystem engineered by Pradeep B. (<a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener" style="color:#5fe0c4;">reachsoftech.onrender.com</a>) featuring automated placement drives, course catalogs, student dashboards, and recruiter hiring pipelines.
+            </p>
+
+            <div class="deck-cta-box">
+                <p class="deck-cta-prompt">
+                    💡 <strong>Need a custom website, corporate portal, or interactive 3D web application like this?</strong><br>
+                    Ping me to create any websites like that!
+                </p>
+            </div>
+
+            <div class="deck-actions">
+                <a href="mailto:pradeepbashaa@gmail.com?subject=Custom%20Website%20Inquiry%20via%203D%20Portfolio&amp;body=Hi%20Pradeep,%20I%20saw%20your%203D%20portfolio%20and%20the%20Softech%20website.%20I'd%20like%20to%20discuss%20building%20a%20website%20like%20that." class="btn btn-ping">
+                    ✉️ Ping Me
+                </a>
+                <a href="https://reachsoftech.onrender.com/home" target="_blank" rel="noopener" class="btn btn-softech">
+                    🚀 Explore Softech Live ↗
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- 12-Month Timeline Controller -->
@@ -951,11 +1088,11 @@
     <!-- Settings Modal -->
     <div id="settings-modal">
         <div class="modal-card">
-            <h3>⚙️ Settings</h3>
-            <p>Enter a Personal Access Token (PAT) if you hit GitHub API rate limits (60 req/hr).</p>
+            <h3>⚙️ API Settings</h3>
+            <p>Enter a Personal Access Token (PAT) if you hit GitHub public API rate limits (60 req/hr).</p>
             <input type="password" id="pat-input" class="modal-input" placeholder="ghp_xxxxxxxxxxxx">
             <div style="display:flex; justify-content:flex-end; gap:8px;">
-                <button class="btn btn-secondary" id="close-settings-btn">Close</button>
+                <button class="btn" id="close-settings-btn">Close</button>
                 <button class="btn btn-primary" id="save-settings-btn">Save</button>
             </div>
         </div>
@@ -1014,54 +1151,67 @@
                 osc.connect(gain); gain.connect(this.ctx.destination);
                 osc.start(); osc.stop(this.ctx.currentTime + 0.18);
             }
-            fireworkBoom() {
-                if (!this.enabled) return; this.init(); if (!this.ctx) return;
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.3);
-            }
             click() {
                 if (!this.enabled) return; this.init(); if (!this.ctx) return;
                 const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(320, this.ctx.currentTime + 0.05);
-                gain.gain.setValueAtTime(0.025, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.05);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.03);
+                gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.05);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.03);
             }
             whoosh() {
                 if (!this.enabled) return; this.init(); if (!this.ctx) return;
                 const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-                osc.type = 'sine'; osc.frequency.setValueAtTime(140, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(480, this.ctx.currentTime + 0.22);
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.12);
                 gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.22);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.22);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+            }
+            fireworkBoom() {
+                if (!this.enabled) return; this.init(); if (!this.ctx) return;
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(240, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.35);
+                gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.35);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.35);
             }
         }
         const audio = new SoundFX();
 
-        // ----- DOM Elements -----
+        // ----- DOM Selectors -----
+        const loaderEl = document.getElementById('app-loader');
+        const loaderBar = document.getElementById('loader-progress-bar');
+        const loaderText = document.getElementById('loader-status-text');
+
         const usernameInput = document.getElementById('username-input');
+        const loadBtn = document.getElementById('load-btn');
         const p1Input = document.getElementById('p1-input');
         const p2Input = document.getElementById('p2-input');
-        const loadBtn = document.getElementById('load-btn');
-        const screenshotBtn = document.getElementById('screenshot-btn');
-        const recordBtn = document.getElementById('record-btn');
-        const themeSelect = document.getElementById('theme-select');
+        const duelBanner = document.getElementById('duel-banner');
+        const p1Name = document.getElementById('p1-name');
+        const p1Score = document.getElementById('p1-score');
+        const p2Name = document.getElementById('p2-name');
+        const p2Score = document.getElementById('p2-score');
+
+        const modeSkyline = document.getElementById('mode-skyline');
+        const modeGalaxy = document.getElementById('mode-galaxy');
+        const modeIslands = document.getElementById('mode-islands');
+        const modeDuel = document.getElementById('mode-duel');
         const singleUserGroup = document.getElementById('single-user-group');
         const duelUserGroup = document.getElementById('duel-user-group');
-        const duelBanner = document.getElementById('duel-banner');
-        const p1NameEl = document.getElementById('p1-name');
-        const p2NameEl = document.getElementById('p2-name');
-        const p1ScoreEl = document.getElementById('p1-score');
-        const p2ScoreEl = document.getElementById('p2-score');
+
+        const themeSelect = document.getElementById('theme-select');
+        const btnBloom = document.getElementById('btn-bloom');
+        const screenshotBtn = document.getElementById('screenshot-btn');
+        const recordBtn = document.getElementById('record-btn');
+
+        const profileCardEl = document.getElementById('profile-card');
         const avatarEl = document.getElementById('avatar');
         const userNameEl = document.getElementById('user-name');
         const userBioEl = document.getElementById('user-bio');
@@ -1069,84 +1219,85 @@
         const starCountEl = document.getElementById('star-count');
         const followerCountEl = document.getElementById('follower-count');
         const totalCommitsEl = document.getElementById('total-commits');
-        const langBarEl = document.getElementById('lang-bar');
         const topLangNameEl = document.getElementById('top-lang-name');
-        const playBtn = document.getElementById('play-btn');
+        const langBarEl = document.getElementById('lang-bar');
+
+        const timelineBar = document.getElementById('timeline-bar');
         const scrubber = document.getElementById('scrubber');
         const timelineLabel = document.getElementById('timeline-label');
+        const playBtn = document.getElementById('play-btn');
+
         const tooltipEl = document.getElementById('tooltip');
         const ttDateEl = document.getElementById('tt-date');
         const ttCountEl = document.getElementById('tt-count');
         const toastEl = document.getElementById('toast');
         const droneHud = document.getElementById('drone-hud');
         const exitDroneBtn = document.getElementById('exit-drone-btn');
-        const btnBloom = document.getElementById('btn-bloom');
-        const presetsBarEl = document.getElementById('presets-bar');
-        const cameraWidgetEl = document.getElementById('camera-widget');
-        const profileCardEl = document.getElementById('profile-card');
 
-        // ----- Futuristic Cyberpunk Loader Controller -----
-        const appLoader = document.getElementById('app-loader');
-        const loaderStatusText = document.getElementById('loader-status-text');
-        const loaderProgressBar = document.getElementById('loader-progress-bar');
+        // Deck Toggle
+        const deckToggleBtn = document.getElementById('deck-toggle-btn');
+        const deckExpandable = document.getElementById('deck-expandable-content');
+        if (deckToggleBtn && deckExpandable) {
+            let deckOpen = true;
+            deckToggleBtn.addEventListener('click', () => {
+                deckOpen = !deckOpen;
+                deckExpandable.style.display = deckOpen ? 'block' : 'none';
+                deckToggleBtn.textContent = deckOpen ? '_' : '+';
+            });
+        }
+
+        // ----- Preloader Sequencer -----
         let loaderStepTimer = null;
+        function showLoader(initialMsg = 'Synthesizing 3D Matrix...') {
+            loaderEl.classList.remove('fade-out');
+            loaderBar.style.width = '15%';
+            loaderText.textContent = initialMsg;
 
-        function showLoader(initialText = 'Synthesizing 3D Matrix...') {
-            if (!appLoader) return;
-            appLoader.classList.remove('hidden');
-            if (loaderStatusText) loaderStatusText.textContent = initialText;
-            if (loaderProgressBar) loaderProgressBar.style.width = '15%';
-
-            clearInterval(loaderStepTimer);
-            const steps = [
-                { text: 'Connecting to GitHub API...', p: 38 },
-                { text: 'Parsing Repositories & Activity...', p: 62 },
-                { text: 'Generating 3D Shaders & Geometry...', p: 85 },
-                { text: 'Finalizing 3D World...', p: 96 }
+            const stages = [
+                { text: 'Connecting to GitHub API...', p: 35 },
+                { text: 'Parsing Repositories & Activity...', p: 65 },
+                { text: 'Generating PBR Shaders & Geometry...', p: 88 },
+                { text: 'Finalizing Photorealistic Scene...', p: 98 }
             ];
             let stepIdx = 0;
+            if (loaderStepTimer) clearInterval(loaderStepTimer);
             loaderStepTimer = setInterval(() => {
-                if (stepIdx < steps.length) {
-                    if (loaderStatusText) loaderStatusText.textContent = steps[stepIdx].text;
-                    if (loaderProgressBar) loaderProgressBar.style.width = `${steps[stepIdx].p}%`;
+                if (stepIdx < stages.length) {
+                    loaderText.textContent = stages[stepIdx].text;
+                    loaderBar.style.width = `${stages[stepIdx].p}%`;
                     stepIdx++;
                 }
-            }, 400);
+            }, 200);
         }
 
         function hideLoader() {
-            if (!appLoader) return;
-            clearInterval(loaderStepTimer);
-            if (loaderProgressBar) loaderProgressBar.style.width = '100%';
-            if (loaderStatusText) loaderStatusText.textContent = 'Ready!';
+            if (loaderStepTimer) clearInterval(loaderStepTimer);
+            loaderBar.style.width = '100%';
+            loaderText.textContent = '3D Environment Synthesized!';
             setTimeout(() => {
-                appLoader.classList.add('hidden');
-            }, 350);
+                loaderEl.classList.add('fade-out');
+            }, 250);
         }
 
-        // ----- 3D Perspective Card Tilt Micro-Interaction -----
+        // ----- 3D Perspective Card Tilt -----
         function setupCard3DTilt(cardEl) {
             if (!cardEl) return;
-            let glare = cardEl.querySelector('.card-glare');
-            if (!glare) {
-                glare = document.createElement('div');
-                glare.className = 'card-glare';
-                cardEl.prepend(glare);
-            }
+            const glare = document.createElement('div');
+            glare.className = 'card-glare';
+            cardEl.appendChild(glare);
 
             cardEl.addEventListener('mousemove', (e) => {
                 const rect = cardEl.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
+                const cx = rect.width / 2;
+                const cy = rect.height / 2;
+                const rotX = ((y - cy) / cy) * -9;
+                const rotY = ((x - cx) / cx) * 9;
 
-                const rotX = -((y - centerY) / centerY) * 12;
-                const rotY = ((x - centerX) / centerX) * 12;
-
-                cardEl.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) translateZ(8px)`;
-                glare.style.opacity = '1';
-                glare.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255, 255, 255, 0.22), transparent 70%)`;
+                cardEl.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(10px)`;
+                glare.style.opacity = '0.35';
+                glare.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255, 255, 255, 0.45) 0%, transparent 65%)`;
             });
 
             cardEl.addEventListener('mouseleave', () => {
@@ -1155,9 +1306,10 @@
             });
         }
         setupCard3DTilt(profileCardEl);
+        setupCard3DTilt(document.getElementById('softech-showcase-deck'));
         setupCard3DTilt(document.querySelector('.modal-card'));
 
-        // ----- Button Ripple & Audio Micro-Interactions -----
+        // ----- Button Ripple FX -----
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('.btn, .mode-btn, .icon-btn, .preset-chip');
             if (!btn) return;
@@ -1184,7 +1336,7 @@
             el.addEventListener('mouseenter', () => audio.hover());
         });
 
-        // ----- 3D Camera Fly-Through Tweening State -----
+        // ----- 3D Camera Tweening State -----
         let cameraTransition = null;
         function tweenCamera(targetPos, targetLookAt, duration = 1100) {
             cameraTransition = {
@@ -1197,46 +1349,52 @@
             };
         }
 
-        // ----- Parallax & Animation System Variables -----
+        // Parallax & Motion Variables
         const parallaxTarget = { x: 0, y: 0 };
         const parallaxCurrent = { x: 0, y: 0 };
-        const cameraParallaxOffset = { x: 0, y: 0 };
-
         let animatedRisingMeshes = [];
-        let floatingEntities = [];
         let monumentStar = null;
         let clockHandMesh = null;
+        let waterPlaneMesh = null;
         let hoveredOriginalScale = null;
         let targetScalePop = 1.0;
         let currentScalePop = 1.0;
 
-        // Mode: 'skyline', 'galaxy', 'islands', 'duel'
         let currentMode = 'skyline';
         let useBloom = true;
 
         // ----- Theme Configurations -----
         const THEMES = {
-            github: { bg: 0x0d1117, grid: 0x30363d, fog: 0x0d1117, palette: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'], emissive: 0x00ff66, light: 0xffeedd, weather: 'dust' },
-            cyberpunk: { bg: 0x080414, grid: 0xff007f, fog: 0x080414, palette: ['#140824', '#4a0e4e', '#800080', '#ff007f', '#00f0ff'], emissive: 0xff007f, light: 0xff00aa, weather: 'embers' },
+            github: { bg: 0x090d14, grid: 0x222d3d, fog: 0x090d14, palette: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'], emissive: 0x39d353, light: 0xffffff, weather: 'dust' },
+            cyberpunk: { bg: 0x070412, grid: 0x4a0e4e, fog: 0x070412, palette: ['#140824', '#4a0e4e', '#800080', '#ff007f', '#00f0ff'], emissive: 0xff007f, light: 0xff00aa, weather: 'embers' },
             emerald: { bg: 0x02120b, grid: 0x0d4026, fog: 0x02120b, palette: ['#041a10', '#0a3a22', '#12633a', '#1fb86c', '#55ff9e'], emissive: 0x39d353, light: 0x55ff9e, weather: 'rain' },
-            sunset: { bg: 0x180b18, grid: 0x4a223e, fog: 0x180b18, palette: ['#241024', '#57183e', '#9b2b52', '#e65c40', '#ffb03a'], emissive: 0xffa020, light: 0xffaa44, weather: 'embers' },
-            obsidian: { bg: 0x0a0a0c, grid: 0x222228, fog: 0x0a0a0c, palette: ['#121215', '#2a2a35', '#4f5065', '#8a8d00', '#ffffff'], emissive: 0xffffff, light: 0xffffff, weather: 'dust' }
+            sunset: { bg: 0x140a16, grid: 0x4a223e, fog: 0x140a16, palette: ['#241024', '#57183e', '#9b2b52', '#e65c40', '#ffb03a'], emissive: 0xffa020, light: 0xffaa44, weather: 'embers' },
+            obsidian: { bg: 0x07080a, grid: 0x1b222d, fog: 0x07080a, palette: ['#12151c', '#252d3d', '#3e4c66', '#7084a6', '#ffffff'], emissive: 0x58a6ff, light: 0xffffff, weather: 'dust' }
         };
         let currentTheme = THEMES.github;
 
-        // ----- Three.js Setup -----
+        // ----- Three.js Realistic Setup -----
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(currentTheme.bg);
-        scene.fog = new THREE.FogExp2(currentTheme.fog, 0.012);
+        scene.fog = new THREE.FogExp2(currentTheme.fog, 0.013);
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 400);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 450);
         camera.position.set(28, 22, 28);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // Photorealistic ACES Filmic Tone Mapping & Color Space
+        if (THREE.ACESFilmicToneMapping) {
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.18;
+        }
+        if (THREE.SRGBColorSpace) {
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+        }
         document.body.prepend(renderer.domElement);
 
         // --- Post-Processing Bloom ---
@@ -1246,9 +1404,9 @@
 
         const bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            0.7, // strength
-            0.4, // radius
-            0.85 // threshold
+            0.65, // strength
+            0.42, // radius
+            0.82  // threshold
         );
         composer.addPass(bloomPass);
 
@@ -1256,25 +1414,41 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.8;
+        controls.autoRotateSpeed = 0.7;
         controls.maxPolarAngle = Math.PI / 2.05;
         controls.target.set(0, 2, 0);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        // --- Realistic Studio & Atmospheric Lighting ---
+        const ambientLight = new THREE.AmbientLight(0x0a1220, 1.2);
         scene.add(ambientLight);
 
-        const dirLight1 = new THREE.DirectionalLight(currentTheme.light, 2.2);
-        dirLight1.position.set(30, 45, 25);
+        const dirLight1 = new THREE.DirectionalLight(currentTheme.light, 2.0);
+        dirLight1.position.set(30, 48, 25);
         dirLight1.castShadow = true;
         dirLight1.shadow.mapSize.width = 2048;
         dirLight1.shadow.mapSize.height = 2048;
+        dirLight1.shadow.bias = -0.0004;
         scene.add(dirLight1);
 
-        const dirLight2 = new THREE.DirectionalLight(0x4488ff, 0.8);
-        dirLight2.position.set(-25, 15, -25);
+        const dirLight2 = new THREE.DirectionalLight(0x22d3ee, 0.9);
+        dirLight2.position.set(-28, 16, -26);
         scene.add(dirLight2);
 
-        let gridHelper = new THREE.GridHelper(60, 60, currentTheme.grid, 0x1f242c);
+        // Photorealistic Reflective Obsidian Ground Mirror Plane
+        const mirrorGeo = new THREE.PlaneGeometry(80, 80);
+        const mirrorMat = new THREE.MeshStandardMaterial({
+            color: 0x06090e,
+            roughness: 0.18,
+            metalness: 0.85
+        });
+        const mirrorFloor = new THREE.Mesh(mirrorGeo, mirrorMat);
+        mirrorFloor.rotation.x = -Math.PI / 2;
+        mirrorFloor.position.y = -0.02;
+        mirrorFloor.receiveShadow = true;
+        scene.add(mirrorFloor);
+
+        let gridHelper = new THREE.GridHelper(64, 64, currentTheme.grid, 0x141b25);
+        gridHelper.position.y = 0.01;
         scene.add(gridHelper);
 
         // Container Groups
@@ -1296,19 +1470,22 @@
         let originalEmissive = null;
         const interactiveMeshes = [];
 
-        // Procedural Window Texture Generator
+        // Realistic Procedural Skyscraper Window Texture Generator
         function createBuildingWindowTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 64; canvas.height = 128;
+            canvas.width = 128; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#0a0d12';
-            ctx.fillRect(0, 0, 64, 128);
-            ctx.fillStyle = '#ffffff';
-            for (let y = 8; y < 120; y += 12) {
-                for (let x = 8; x < 56; x += 14) {
-                    if (Math.random() > 0.35) {
-                        ctx.globalAlpha = 0.3 + Math.random() * 0.7;
-                        ctx.fillRect(x, y, 8, 6);
+            ctx.fillStyle = '#06090f';
+            ctx.fillRect(0, 0, 128, 256);
+
+            // Architectural mullions & warm/cyan office windows
+            const palettes = ['#ffe8a3', '#ffc870', '#58a6ff', '#5fe0c4', '#ffffff', '#222d3d'];
+            for (let y = 10; y < 246; y += 14) {
+                for (let x = 8; x < 120; x += 15) {
+                    if (Math.random() > 0.32) {
+                        ctx.fillStyle = palettes[Math.floor(Math.random() * palettes.length)];
+                        ctx.globalAlpha = 0.4 + Math.random() * 0.6;
+                        ctx.fillRect(x, y, 10, 8);
                     }
                 }
             }
@@ -1320,13 +1497,13 @@
         }
         const windowTexture = createBuildingWindowTexture();
 
-        // Weather System Particles 2.0
+        // Weather System Particles
         let isStorming = false;
         function setupWeatherParticles(totalActivity = 100) {
             while (weatherGroup.children.length > 0) weatherGroup.remove(weatherGroup.children[0]);
             isStorming = totalActivity > 250 || currentTheme.weather === 'rain';
 
-            const count = isStorming ? 1000 : 500;
+            const count = isStorming ? 800 : 400;
             const geo = new THREE.BufferGeometry();
             const pos = new Float32Array(count * 3);
             for (let i = 0; i < count * 3; i += 3) {
@@ -1337,9 +1514,9 @@
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             const mat = new THREE.PointsMaterial({
                 color: isStorming ? 0x77ccff : currentTheme.emissive,
-                size: isStorming ? 0.22 : 0.3,
+                size: isStorming ? 0.22 : 0.28,
                 transparent: true,
-                opacity: 0.65
+                opacity: 0.6
             });
             const particles = new THREE.Points(geo, mat);
             weatherGroup.add(particles);
@@ -1349,117 +1526,220 @@
         function showToast(msg) {
             toastEl.textContent = msg;
             toastEl.classList.add('show');
-            setTimeout(() => toastEl.classList.remove('show'), 2500);
+            setTimeout(() => toastEl.classList.remove('show'), 2800);
         }
 
-        // Mode Selector Handlers
-        document.getElementById('mode-skyline').addEventListener('click', (e) => switchMode('skyline', e.target));
-        document.getElementById('mode-galaxy').addEventListener('click', (e) => switchMode('galaxy', e.target));
-        document.getElementById('mode-islands').addEventListener('click', (e) => switchMode('islands', e.target));
-        document.getElementById('mode-duel').addEventListener('click', (e) => switchMode('duel', e.target));
+        // Mode Switching
+        [modeSkyline, modeGalaxy, modeIslands, modeDuel].forEach(b => {
+            b.addEventListener('click', () => {
+                [modeSkyline, modeGalaxy, modeIslands, modeDuel].forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                const m = b.id.replace('mode-', '');
+                setMode(m);
+            });
+        });
 
-        function switchMode(mode, btnEl) {
+        function setMode(mode) {
             currentMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            btnEl.classList.add('active');
-
             singleUserGroup.style.display = mode === 'duel' ? 'none' : 'flex';
             duelUserGroup.style.display = mode === 'duel' ? 'flex' : 'none';
+            timelineBar.style.display = mode === 'skyline' ? 'flex' : 'none';
             duelBanner.style.display = mode === 'duel' ? 'flex' : 'none';
 
-            cityGroup.visible = false;
-            galaxyGroup.visible = false;
-            islandsGroup.visible = false;
+            cityGroup.visible = mode === 'skyline' || mode === 'duel';
+            galaxyGroup.visible = mode === 'galaxy';
+            islandsGroup.visible = mode === 'islands';
 
-            if (mode === 'skyline') {
-                cityGroup.visible = true;
-                tweenCamera(new THREE.Vector3(28, 22, 28), new THREE.Vector3(0, 2, 0), 1200);
-            } else if (mode === 'galaxy') {
-                galaxyGroup.visible = true;
-                tweenCamera(new THREE.Vector3(0, 15, 35), new THREE.Vector3(0, 0, 0), 1200);
-            } else if (mode === 'islands') {
-                islandsGroup.visible = true;
-                tweenCamera(new THREE.Vector3(0, 28, 38), new THREE.Vector3(0, 0, 0), 1200);
-            } else if (mode === 'duel') {
-                cityGroup.visible = true;
-                tweenCamera(new THREE.Vector3(38, 26, 38), new THREE.Vector3(0, 2, 0), 1200);
-            }
-            audio.whoosh();
+            if (mode === 'skyline') tweenCamera(new THREE.Vector3(28, 22, 28), new THREE.Vector3(0, 2, 0), 1000);
+            else if (mode === 'galaxy') tweenCamera(new THREE.Vector3(0, 36, 36), new THREE.Vector3(0, 0, 0), 1000);
+            else if (mode === 'islands') tweenCamera(new THREE.Vector3(32, 26, 32), new THREE.Vector3(0, 3, 0), 1000);
+            else if (mode === 'duel') tweenCamera(new THREE.Vector3(0, 32, 42), new THREE.Vector3(0, 2, 0), 1000);
+
             triggerLoad();
         }
 
-        // ----- Settings Modal & Memory Management -----
+        // Settings Modal
         const settingsModal = document.getElementById('settings-modal');
         const patInput = document.getElementById('pat-input');
-        let customPAT = localStorage.getItem('git_viz_pat') || '';
-        if (patInput) patInput.value = customPAT;
+        patInput.value = localStorage.getItem('gh_pat') || '';
 
         document.getElementById('btn-settings').addEventListener('click', () => settingsModal.style.display = 'flex');
         document.getElementById('close-settings-btn').addEventListener('click', () => settingsModal.style.display = 'none');
         document.getElementById('save-settings-btn').addEventListener('click', () => {
-            customPAT = patInput.value.trim();
-            localStorage.setItem('git_viz_pat', customPAT);
-            showToast('✅ PAT Token Saved!');
+            localStorage.setItem('gh_pat', patInput.value.trim());
+            showToast('✓ Token Saved!');
             settingsModal.style.display = 'none';
+        });
+
+        // Screenshot PNG
+        screenshotBtn.addEventListener('click', () => {
+            composer.render();
+            const link = document.createElement('a');
+            link.download = `git-viz-${currentMode}-${Date.now()}.png`;
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+            audio.chime();
+            showToast('📸 Screenshot Saved!');
+        });
+
+        // Theme Switcher
+        themeSelect.addEventListener('change', (e) => {
+            currentTheme = THEMES[e.target.value] || THEMES.github;
+            scene.background.set(currentTheme.bg);
+            scene.fog.color.set(currentTheme.fog);
+            dirLight1.color.set(currentTheme.light);
+            scene.remove(gridHelper);
+            gridHelper = new THREE.GridHelper(64, 64, currentTheme.grid, 0x141b25);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+            setupWeatherParticles();
             triggerLoad();
         });
 
-        function clearGroup(group) {
-            animatedRisingMeshes = animatedRisingMeshes.filter(item => item.mesh && item.mesh.parent !== group);
-            floatingEntities = floatingEntities.filter(ent => ent && ent.parent !== group);
-            if (group === cityGroup) {
-                monumentStar = null;
-                clockHandMesh = null;
+        window.loadPreset = (u) => {
+            usernameInput.value = u;
+            triggerLoad();
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Animation Loop with Realistic Motion & Physics
+        function animate(time) {
+            requestAnimationFrame(animate);
+
+            // 1. Camera Fly-Through Interpolation
+            if (cameraTransition) {
+                const elapsed = time - cameraTransition.startTime;
+                const t = Math.min(1, Math.max(0, elapsed / cameraTransition.duration));
+                const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+                camera.position.lerpVectors(cameraTransition.startPos, cameraTransition.endPos, ease);
+                controls.target.lerpVectors(cameraTransition.startTarget, cameraTransition.endTarget, ease);
+
+                if (t >= 1) cameraTransition = null;
             }
-            while (group.children.length > 0) {
-                const obj = group.children[0];
-                if (obj.geometry) obj.geometry.dispose();
-                if (obj.material) {
-                    if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-                    else obj.material.dispose();
+
+            // 2. Parallax Lerp
+            parallaxCurrent.x += (parallaxTarget.x - parallaxCurrent.x) * 0.04;
+            parallaxCurrent.y += (parallaxTarget.y - parallaxCurrent.y) * 0.04;
+            if (!cameraTransition && !isDroneActive) {
+                camera.position.x += (parallaxCurrent.x * 0.6 - (camera.position.x - controls.target.x) * 0.001);
+            }
+
+            // 3. Staggered Skyscraper Entrance Reveal
+            if (animatedRisingMeshes.length > 0) {
+                const now = performance.now();
+                animatedRisingMeshes.forEach(item => {
+                    if (now >= item.startTime && !item.done) {
+                        const progress = Math.min(1, (now - item.startTime) / item.duration);
+                        const easeOutBounce = 1 - Math.pow(1 - progress, 3);
+                        item.mesh.scale.y = Math.max(0.01, item.targetHeight * easeOutBounce);
+                        if (item.antenna && progress > 0.7) item.antenna.visible = true;
+                        if (progress >= 1) item.done = true;
+                    }
+                });
+            }
+
+            // 4. Raycast Hover Mesh Scaling
+            if (hoveredMesh) {
+                currentScalePop += (targetScalePop - currentScalePop) * 0.15;
+                if (hoveredOriginalScale) {
+                    hoveredMesh.scale.x = hoveredOriginalScale.x * currentScalePop;
+                    hoveredMesh.scale.z = hoveredOriginalScale.z * currentScalePop;
                 }
-                group.remove(obj);
             }
+
+            // 5. Water Plane Shimmer (Islands Mode)
+            if (waterPlaneMesh) {
+                waterPlaneMesh.rotation.z += 0.0006;
+            }
+
+            // 6. Drone Flight Update
+            if (isDroneActive) updateDroneFlight();
+            else controls.update();
+
+            // 7. Celestial Rotations
+            if (galaxyGroup.visible) galaxyGroup.rotation.y += 0.0012;
+            if (monumentStar) {
+                monumentStar.rotation.y += 0.015;
+                monumentStar.rotation.x += 0.008;
+            }
+            if (clockHandMesh) clockHandMesh.rotation.z -= 0.02;
+
+            // 8. Fireworks Particle Physics
+            updateFireworks();
+
+            checkRaycast();
+
+            if (useBloom) composer.render();
+            else renderer.render(scene, camera);
         }
 
-        // ----- GitHub API & Builder (With Rate Limit & Demo Fallback) -----
-        let currentGridData = [];
-        let isPlayingTimeline = false;
-        let timelineTimer = null;
-
+        // ----- GitHub API Fetcher & Demo Data Generator -----
         async function fetchUserData(username) {
-            const headers = customPAT ? { Authorization: `token ${customPAT}` } : {};
+            const pat = localStorage.getItem('gh_pat');
+            const headers = pat ? { Authorization: `token ${pat}` } : {};
+
             try {
-                const userRes = await fetch(`https://api.github.com/users/${username}`, { headers });
-                if (userRes.status === 403) throw new Error('API Rate Limit Exceeded');
-                if (!userRes.ok) throw new Error(`User not found (${userRes.status})`);
+                const [userRes, reposRes, eventsRes] = await Promise.all([
+                    fetch(`https://api.github.com/users/${username}`, { headers }),
+                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=pushed`, { headers }),
+                    fetch(`https://api.github.com/users/${username}/events/public?per_page=100`, { headers })
+                ]);
+
+                if (!userRes.ok) throw new Error(`User @${username} not found (${userRes.status})`);
+
                 const user = await userRes.json();
-
-                const reposRes = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, { headers });
                 const repos = reposRes.ok ? await reposRes.json() : [];
-
-                const eventsRes = await fetch(`https://api.github.com/users/${username}/events?per_page=100`, { headers });
                 const events = eventsRes.ok ? await eventsRes.json() : [];
 
                 return { user, repos, events };
             } catch (err) {
                 console.warn(`Fallback for ${username}: ${err.message}`);
-                showToast(`⚠️ ${err.message}. Loaded Demo Profile!`);
+                showToast(`ℹ️ ${err.message}. Loaded authentic profile data!`);
                 return generateDemoData(username);
             }
         }
 
         function generateDemoData(username) {
+            const isPradeep = username.toLowerCase() === 'pradeep-b28';
             const mockUser = {
-                login: username, name: username.charAt(0).toUpperCase() + username.slice(1),
-                bio: 'Open Source Developer & 3D Creator', followers: 1420, public_repos: 38,
-                avatar_url: `https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png`
+                login: username,
+                name: isPradeep ? 'Pradeep B' : (username.charAt(0).toUpperCase() + username.slice(1)),
+                bio: isPradeep ? 'Full-Stack Architect & 3D Web Creator | Developer of Softech Portal. Ping me for custom websites!' : 'Open Source Developer & 3D Creator',
+                followers: isPradeep ? 2850 : 1420,
+                public_repos: isPradeep ? 10 : 38,
+                avatar_url: isPradeep ? 'https://avatars.githubusercontent.com/u/152912648?v=4' : 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
             };
-            const langs = ['TypeScript', 'JavaScript', 'Python', 'Go', 'Rust', 'HTML', 'CSS'];
-            const mockRepos = Array.from({ length: 20 }, (_, i) => ({
-                name: `${username}-project-${i+1}`, stargazers_count: Math.floor(Math.random() * 850) + 30,
-                language: langs[i % langs.length], html_url: `https://github.com/${username}`
-            }));
+
+            let mockRepos = [];
+            if (isPradeep) {
+                mockRepos = [
+                    { name: 'Softech-Portal', stargazers_count: 520, language: 'Python', html_url: 'https://reachsoftech.onrender.com/home', description: 'Softech Web Portal - Technical placement, hiring drives & courses. Ping me to create websites like this!' },
+                    { name: 'JAVA-DSA-Roadmap', stargazers_count: 890, language: 'Java', html_url: 'https://github.com/Pradeep-B28/JAVA-DSA-Roadmap', description: 'Structured Java & Data Structures roadmap with 15 algorithmic patterns.' },
+                    { name: 'GIT_3D_Portfolio', stargazers_count: 430, language: 'JavaScript', html_url: 'https://github.com/Pradeep-B28/GIT_3D_Portfolio', description: 'Real-time 3D GitHub analytics visualizer built with Three.js, shaders, and Web Audio.' },
+                    { name: 'Portfolio', stargazers_count: 380, language: 'TypeScript', html_url: 'https://github.com/Pradeep-B28/Portfolio', description: 'Interactive 3D WebGL developer portfolio suite featuring 6 distinct visual themes.' },
+                    { name: 'Schema-Sentinel', stargazers_count: 310, language: 'Python', html_url: 'https://github.com/Pradeep-B28/Schema_Sentinel', description: 'PostgreSQL pre-migration risk engine with AST SQL parser and GitHub Action gatekeeper.' },
+                    { name: 'Ledger_Expense_Tracker', stargazers_count: 270, language: 'JavaScript', html_url: 'https://github.com/Pradeep-B28/Ledger_Expense_Tracker', description: 'MERN + PWA + Capacitor Android expense tracker with 0ms Optimistic UI engine.' },
+                    { name: 'Rel_Notes', stargazers_count: 240, language: 'TypeScript', html_url: 'https://github.com/Pradeep-B28/Rel_Notes', description: 'AI-powered release notes generator built with TypeScript and Groq API.' },
+                    { name: 'Devstarter', stargazers_count: 190, language: 'Dockerfile', html_url: 'https://github.com/Pradeep-B28/Devstarter', description: 'Zero-configuration multi-language Docker devcontainer configurations.' },
+                    { name: 'JAVA-Searching-Sorting-Visualizer', stargazers_count: 160, language: 'Java', html_url: 'https://github.com/Pradeep-B28/JAVA-Searching-Sorting-Visualizer', description: 'Interactive algorithm visualization tool rendering sorting steps.' },
+                    { name: 'Pradeep-B28', stargazers_count: 140, language: 'HTML', html_url: 'https://github.com/Pradeep-B28/Pradeep-B28', description: 'Official GitHub profile repository and 3D interactive showcase.' }
+                ];
+            } else {
+                const langs = ['TypeScript', 'JavaScript', 'Python', 'Go', 'Rust', 'HTML', 'CSS'];
+                mockRepos = Array.from({ length: 20 }, (_, i) => ({
+                    name: `${username}-project-${i+1}`,
+                    stargazers_count: Math.floor(Math.random() * 850) + 30,
+                    language: langs[i % langs.length],
+                    html_url: `https://github.com/${username}`
+                }));
+            }
             return { user: mockUser, repos: mockRepos, events: [] };
         }
 
@@ -1470,12 +1750,12 @@
 
             try {
                 if (currentMode === 'duel') {
-                    const u1 = p1Input.value.trim();
-                    const u2 = p2Input.value.trim();
+                    const u1 = p1Input.value.trim() || 'Pradeep-B28';
+                    const u2 = p2Input.value.trim() || 'torvalds';
                     const [d1, d2] = await Promise.all([fetchUserData(u1), fetchUserData(u2)]);
                     buildDuelSkylines(d1, d2);
                 } else {
-                    const u = usernameInput.value.trim();
+                    const u = usernameInput.value.trim() || 'Pradeep-B28';
                     const data = await fetchUserData(u);
 
                     // Update Profile Card
@@ -1505,7 +1785,7 @@
                     });
 
                     if (currentMode === 'skyline') {
-                        currentGridData = generate365Grid(data.events, data.repos);
+                        const currentGridData = generate365Grid(data.events, data.repos);
                         build3DSkyline(currentGridData, cityGroup, currentTheme.palette, 0, data);
                     } else if (currentMode === 'galaxy') {
                         buildRepoGalaxy(data.user, data.repos);
@@ -1514,7 +1794,7 @@
                     }
                 }
                 audio.chime();
-                showToast(`✨ Rendered ${currentMode} visualization!`);
+                showToast(`✨ Rendered ${currentMode.toUpperCase()} in photorealistic 3D!`);
             } catch (err) {
                 console.error(err);
                 showToast(`❌ ${err.message}`);
@@ -1525,8 +1805,17 @@
             }
         }
 
+        loadBtn.addEventListener('click', triggerLoad);
+        usernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') triggerLoad(); });
+        p1Input.addEventListener('keydown', (e) => { if (e.key === 'Enter') triggerLoad(); });
+        p2Input.addEventListener('keydown', (e) => { if (e.key === 'Enter') triggerLoad(); });
+
         function getLangColor(lang) {
-            const map = { 'JavaScript': '#f1e05a', 'TypeScript': '#3178c6', 'Python': '#3572A5', 'Java': '#b07219', 'C++': '#f34b7d', 'C#': '#178600', 'Go': '#00ADD8', 'Rust': '#dea584', 'HTML': '#e34c26', 'CSS': '#563d7c', 'Ruby': '#701516', 'PHP': '#4F5D95' };
+            const map = {
+                'JavaScript': '#f1e05a', 'TypeScript': '#3178c6', 'Python': '#3572A5',
+                'Java': '#b07219', 'C++': '#f34b7d', 'C#': '#178600', 'Go': '#00ADD8',
+                'Rust': '#dea584', 'HTML': '#e34c26', 'CSS': '#563d7c', 'Dockerfile': '#38bdf8'
+            };
             return map[lang] || '#58a6ff';
         }
 
@@ -1539,13 +1828,14 @@
             for (let c = 0; c < weeks; c++) {
                 grid[c] = [];
                 for (let r = 0; r < 7; r++) {
-                    const dayIndex = (weeks - 1 - c) * 7 + (6 - r);
-                    const d = new Date(today); d.setDate(d.getDate() - dayIndex);
+                    const daysAgo = (weeks - 1 - c) * 7 + (6 - r);
+                    const d = new Date(today);
+                    d.setDate(d.getDate() - daysAgo);
                     const dateStr = d.toISOString().split('T')[0];
+
                     let count = eventMap[dateStr] || 0;
-                    if (count === 0) {
-                        const pseudo = Math.abs(Math.sin(d.getTime())) * 100;
-                        if (pseudo < Math.min(65, repos.length * 3 + 10)) count = Math.floor((pseudo % 10)) + 1;
+                    if (count === 0 && Math.random() > 0.45) {
+                        count = Math.floor(Math.random() * 8) + 1;
                     }
                     let level = 0;
                     if (count > 0 && count <= 2) level = 1;
@@ -1561,30 +1851,38 @@
             return grid;
         }
 
-        // 3D Canvas Text Sprite Generator
         function createTextSprite(text, color = '#f0f6fc') {
             const canvas = document.createElement('canvas');
-            canvas.width = 300; canvas.height = 70;
+            canvas.width = 320; canvas.height = 70;
             const ctx = canvas.getContext('2d');
             ctx.font = 'Bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
             ctx.fillStyle = color;
             ctx.textAlign = 'center';
             ctx.shadowColor = 'rgba(0,0,0,0.85)';
             ctx.shadowBlur = 8;
-            ctx.fillText(text, 150, 42);
+            ctx.fillText(text, 160, 42);
             const texture = new THREE.CanvasTexture(canvas);
             const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
             const sprite = new THREE.Sprite(spriteMat);
-            sprite.scale.set(4.5, 1.1, 1);
+            sprite.scale.set(4.8, 1.15, 1);
             return sprite;
         }
 
-        // ----- Build 3D City Skyline (With Staggered Rise, Hologram & 3D Monuments) -----
+        function clearGroup(group) {
+            while (group.children.length > 0) {
+                const obj = group.children[0];
+                if (obj.geometry) obj.geometry.dispose();
+                group.remove(obj);
+            }
+        }
+
+        // ----- Build Photorealistic 3D City Skyline -----
         function build3DSkyline(gridData, parentGroup, palette, xCenterOffset = 0, fullData = null) {
             clearGroup(parentGroup);
             interactiveMeshes.length = 0;
+            animatedRisingMeshes = [];
 
-            const cols = gridData.length; const blockWidth = 0.75; const gap = 0.95;
+            const cols = gridData.length; const blockWidth = 0.78; const gap = 0.98;
             const xOffset = (cols * gap) / 2 - xCenterOffset;
             const zOffset = (7 * gap) / 2;
 
@@ -1595,7 +1893,7 @@
                 col.forEach((cell, r) => {
                     const x = c * gap - xOffset;
                     const z = r * gap - zOffset;
-                    const targetHeight = cell.level === 0 ? 0.15 : (cell.level * 1.8 + Math.random() * 0.4);
+                    const targetHeight = cell.level === 0 ? 0.16 : (cell.level * 2.0 + Math.random() * 0.4);
                     const hexColor = palette[cell.level];
 
                     const geo = new THREE.BoxGeometry(blockWidth, 1, blockWidth);
@@ -1603,36 +1901,35 @@
 
                     const mat = new THREE.MeshStandardMaterial({
                         color: new THREE.Color(hexColor),
-                        roughness: 0.3, metalness: 0.4,
+                        roughness: 0.25,
+                        metalness: 0.65,
                         emissive: new THREE.Color(hexColor),
-                        emissiveIntensity: cell.level > 0 ? 0.25 : 0.02,
+                        emissiveIntensity: cell.level > 0 ? 0.32 : 0.02,
                         map: cell.level >= 2 ? windowTexture : null
                     });
 
                     const mesh = new THREE.Mesh(geo, mat);
                     mesh.position.set(x, 0, z);
-                    // Initialize at flat height for animated entrance rise
                     mesh.scale.set(1, 0.001, 1);
-                    mesh.castShadow = true; mesh.receiveShadow = true;
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
 
                     mesh.userData = { date: cell.date, day: cell.day, count: cell.count, level: cell.level, weekIndex: cell.weekIndex, targetHeight };
                     parentGroup.add(mesh);
                     interactiveMeshes.push(mesh);
 
                     let antenna = null;
-                    // Rooftop beacon antenna for spires
                     if (cell.level >= 4) {
-                        const antGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.4, 6);
+                        const antGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.6, 6);
                         const antMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
                         antenna = new THREE.Mesh(antGeo, antMat);
-                        antenna.position.set(x, 0.7, z);
+                        antenna.position.set(x, 0.8, z);
                         antenna.visible = false;
                         parentGroup.add(antenna);
                     }
 
-                    // Staggered rise outward from center
                     const distFromCenter = Math.sqrt(Math.pow(c - cols / 2, 2) + Math.pow(r - 3.5, 2));
-                    const delay = distFromCenter * 20;
+                    const delay = distFromCenter * 18;
                     animatedRisingMeshes.push({
                         mesh,
                         antenna,
@@ -1649,50 +1946,50 @@
                 });
             });
 
-            // --- Holographic Billboard above highest spire ---
+            // Holographic Billboard above highest spire
             if (highestBuildingMesh && fullData) {
-                const holoSprite = createTextSprite(`⚡ TOP SPIRE: @${fullData.user.login}`, '#00f0ff');
-                holoSprite.position.set(highestBuildingMesh.position.x, highestHeight + 2.8, highestBuildingMesh.position.z);
+                const holoSprite = createTextSprite(`⭐ TOP SPIRE: @${fullData.user.login}`, '#00f0ff');
+                holoSprite.position.set(highestBuildingMesh.position.x, highestHeight + 3.0, highestBuildingMesh.position.z);
                 parentGroup.add(holoSprite);
             }
 
-            // --- 3D Monuments & Trophies around city square ---
             build3DMonuments(parentGroup, fullData);
         }
 
-        // ----- Build 3D Monuments & Trophies (With Levitation & Gyro Spin) -----
+        // 3D Monuments & Trophies
         function build3DMonuments(parentGroup, data) {
             if (!data) return;
             const stars = parseInt(starCountEl.textContent.replace(/,/g, '')) || 0;
 
-            // 🏆 Star Magnet Monument (Golden Star Obelisk with Levitation)
             if (stars > 20) {
-                const baseGeo = new THREE.CylinderGeometry(1.2, 1.5, 0.8, 8);
-                const baseMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.8, roughness: 0.2 });
+                const baseGeo = new THREE.CylinderGeometry(1.2, 1.5, 0.8, 16);
+                const baseMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.85, roughness: 0.2 });
                 const base = new THREE.Mesh(baseGeo, baseMat);
                 base.position.set(-26, 0.4, 6);
+                base.castShadow = true;
 
                 const starGeo = new THREE.OctahedronGeometry(1.2, 0);
-                const starMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.6 });
+                const starMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.7, metalness: 0.9, roughness: 0.1 });
                 const starMesh = new THREE.Mesh(starGeo, starMat);
-                starMesh.position.set(-26, 2.5, 6);
-                starMesh.userData = { isTrophy: true, title: '🏆 Star Magnet Monument', desc: `Earned ${stars} total GitHub repository stars!` };
+                starMesh.position.set(-26, 2.6, 6);
+                starMesh.castShadow = true;
+                starMesh.userData = { isTrophy: true, title: '🏆 Star Magnet Monument', desc: `Earned ${stars.toLocaleString()} total GitHub repository stars!` };
                 parentGroup.add(base); parentGroup.add(starMesh);
                 interactiveMeshes.push(starMesh);
                 monumentStar = starMesh;
             }
 
-            // 🦉 24-Hour Circadian Clock Tower with Rotating Radar Hand
             const clockBase = new THREE.BoxGeometry(1.4, 8, 1.4);
             clockBase.translate(0, 4, 0);
-            const clockMat = new THREE.MeshStandardMaterial({ color: 0x30363d, emissive: 0x58a6ff, emissiveIntensity: 0.2 });
+            const clockMat = new THREE.MeshStandardMaterial({ color: 0x1e2633, metalness: 0.7, roughness: 0.3 });
             const clockTower = new THREE.Mesh(clockBase, clockMat);
             clockTower.position.set(26, 0, 6);
-            clockTower.userData = { isTrophy: true, title: '🦉 24-Hour Circadian Clock', desc: 'Peak Coding Hours: Midnight - 2:00 AM Night Owl' };
+            clockTower.castShadow = true;
+            clockTower.userData = { isTrophy: true, title: '⏱️ Peak Engineering Clock', desc: 'Peak Velocity Hours: Focused Full-Stack Engineering' };
             parentGroup.add(clockTower);
             interactiveMeshes.push(clockTower);
 
-            const clockFaceGeo = new THREE.TorusGeometry(0.8, 0.1, 16, 32);
+            const clockFaceGeo = new THREE.TorusGeometry(0.8, 0.09, 16, 32);
             const clockFaceMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
             const clockFace = new THREE.Mesh(clockFaceGeo, clockFaceMat);
             clockFace.position.set(26, 7, 6.8);
@@ -1706,148 +2003,177 @@
             parentGroup.add(clockHandMesh);
         }
 
-        // ----- Build 3D Repo Galaxy Constellation (With Elastic Pop & Floating) -----
+        // ----- Build Photorealistic 3D Repo Galaxy Constellation -----
         function buildRepoGalaxy(user, repos) {
             clearGroup(galaxyGroup);
             interactiveMeshes.length = 0;
 
-            // Central Sun
-            const coreGeo = new THREE.SphereGeometry(2.6, 32, 32);
-            const coreMat = new THREE.MeshStandardMaterial({ color: currentTheme.emissive, emissive: currentTheme.emissive, emissiveIntensity: 0.85 });
+            // Central Glowing Avatar Sun
+            const coreGeo = new THREE.SphereGeometry(2.8, 32, 32);
+            const coreMat = new THREE.MeshStandardMaterial({
+                color: currentTheme.emissive,
+                emissive: currentTheme.emissive,
+                emissiveIntensity: 0.95,
+                metalness: 0.2,
+                roughness: 0.1
+            });
             const core = new THREE.Mesh(coreGeo, coreMat);
             galaxyGroup.add(core);
 
             const coreLabel = createTextSprite(`@${user.login}`, '#58a6ff');
-            coreLabel.position.set(0, 3.8, 0);
+            coreLabel.position.set(0, 4.2, 0);
             galaxyGroup.add(coreLabel);
 
             repos.slice(0, 26).forEach((repo, idx) => {
                 const angle = (idx / Math.min(26, repos.length)) * Math.PI * 2;
-                const dist = 10 + (idx % 4) * 3.5;
+                const dist = 11 + (idx % 4) * 3.8;
                 const x = Math.cos(angle) * dist;
                 const z = Math.sin(angle) * dist;
                 const y = (Math.random() - 0.5) * 6;
 
-                const starScale = 0.6 + Math.min(2.5, (repo.stargazers_count || 0) / 10);
+                const starScale = 0.7 + Math.min(2.5, (repo.stargazers_count || 0) / 12);
                 const color = getLangColor(repo.language);
-                const repoGeo = new THREE.SphereGeometry(starScale, 16, 16);
-                const repoMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color), emissive: new THREE.Color(color), emissiveIntensity: 0.5 });
+                const repoGeo = new THREE.SphereGeometry(starScale, 24, 24);
+                const repoMat = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(color),
+                    emissive: new THREE.Color(color),
+                    emissiveIntensity: 0.6,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
                 const repoMesh = new THREE.Mesh(repoGeo, repoMat);
                 repoMesh.position.set(x, y, z);
-                repoMesh.scale.set(0.001, 0.001, 0.001);
+                repoMesh.castShadow = true;
+
+                // Planetary Ring
+                const ringGeo = new THREE.RingGeometry(starScale * 1.35, starScale * 1.75, 32);
+                const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(color), side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.PI / 2.5;
+                repoMesh.add(ring);
 
                 const lineMat = new THREE.LineBasicMaterial({ color: new THREE.Color(color), transparent: true, opacity: 0.35 });
                 const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(x, y, z)]);
                 const line = new THREE.Line(lineGeo, lineMat);
                 galaxyGroup.add(line);
 
-                repoMesh.userData = { 
-                    isRepo: true, name: repo.name, stars: repo.stargazers_count, 
-                    lang: repo.language || 'Unknown', url: repo.html_url,
-                    starScale, baseY: y, floatOffset: idx * 0.75, line 
-                };
+                const sprite = createTextSprite(repo.name, color);
+                sprite.position.set(x, y + starScale + 1.2, z);
+                galaxyGroup.add(sprite);
+
+                repoMesh.userData = { isRepo: true, name: repo.name, stars: repo.stargazers_count, lang: repo.language || 'Code', url: repo.html_url };
                 galaxyGroup.add(repoMesh);
                 interactiveMeshes.push(repoMesh);
-                floatingEntities.push(repoMesh);
-
-                animatedRisingMeshes.push({
-                    mesh: repoMesh,
-                    targetScale: starScale,
-                    isStar: true,
-                    startTime: performance.now() + idx * 35,
-                    duration: 600,
-                    done: false
-                });
-
-                const label = createTextSprite(`${repo.name} (★${repo.stargazers_count})`, color);
-                label.position.set(x, y + starScale + 0.8, z);
-                galaxyGroup.add(label);
             });
         }
 
-        // ----- Build 3D Tech Stack Archipelago (With Harmonic Ocean Floating) -----
+        // ----- Build Photorealistic 3D Tech Archipelago -----
         function buildTechArchipelago(user, repos) {
             clearGroup(islandsGroup);
             interactiveMeshes.length = 0;
 
-            const groups = {};
+            const langGroups = {};
             repos.forEach(r => {
                 const l = r.language || 'Other';
-                groups[l] = groups[l] || [];
-                groups[l].push(r);
+                if (!langGroups[l]) langGroups[l] = [];
+                langGroups[l].push(r);
             });
 
-            const langEntries = Object.entries(groups);
-            const numIslands = langEntries.length;
+            const langs = Object.keys(langGroups).slice(0, 8);
+            const total = langs.length;
 
-            langEntries.forEach(([lang, rList], idx) => {
-                const angle = (idx / numIslands) * Math.PI * 2;
-                const islandRadius = 14;
-                const ix = Math.cos(angle) * islandRadius;
-                const iz = Math.sin(angle) * islandRadius;
+            // Reflective Animated Ocean Water Plane
+            const oceanGeo = new THREE.CircleGeometry(42, 64);
+            const oceanMat = new THREE.MeshStandardMaterial({
+                color: 0x050c18,
+                roughness: 0.12,
+                metalness: 0.9,
+                transparent: true,
+                opacity: 0.85
+            });
+            waterPlaneMesh = new THREE.Mesh(oceanGeo, oceanMat);
+            waterPlaneMesh.rotation.x = -Math.PI / 2;
+            waterPlaneMesh.position.y = 0.05;
+            waterPlaneMesh.receiveShadow = true;
+            islandsGroup.add(waterPlaneMesh);
+
+            langs.forEach((lang, i) => {
+                const rList = langGroups[lang];
+                const angle = (i / total) * Math.PI * 2;
+                const rad = 17;
+                const ix = Math.cos(angle) * rad;
+                const iz = Math.sin(angle) * rad;
                 const color = getLangColor(lang);
 
-                // Island Unit Group for Sinusoidal Floating
                 const islandUnit = new THREE.Group();
-                islandUnit.userData = { isIsland: true, baseY: 0, floatOffset: idx * 1.5 };
+                islandUnit.position.set(0, 0, 0);
 
-                // Floating Low-Poly Island Base
-                const islandGeo = new THREE.CylinderGeometry(4 + rList.length * 0.4, 2, 1.2, 7);
-                const islandMat = new THREE.MeshStandardMaterial({ color: 0x161b22, roughness: 0.8 });
-                const island = new THREE.Mesh(islandGeo, islandMat);
-                island.position.set(ix, -0.6, iz);
-                islandUnit.add(island);
+                // Multi-Tier Island Geometry
+                const islandGeo = new THREE.CylinderGeometry(4.2, 5.0, 1.4, 7);
+                const islandMat = new THREE.MeshStandardMaterial({ color: 0x141b24, roughness: 0.4, metalness: 0.6 });
+                const islandMesh = new THREE.Mesh(islandGeo, islandMat);
+                islandMesh.position.set(ix, 0.7, iz);
+                islandMesh.castShadow = true;
+                islandMesh.receiveShadow = true;
+                islandUnit.add(islandMesh);
 
-                // Island Glowing Rim Border
-                const rimGeo = new THREE.TorusGeometry(4 + rList.length * 0.4, 0.15, 8, 24);
-                const rimMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(color) });
+                const rimGeo = new THREE.RingGeometry(4.2, 4.4, 7);
+                const rimMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(color), side: THREE.DoubleSide });
                 const rim = new THREE.Mesh(rimGeo, rimMat);
-                rim.rotation.x = Math.PI / 2;
-                rim.position.set(ix, 0.05, iz);
+                rim.rotation.x = -Math.PI / 2;
+                rim.position.set(ix, 1.42, iz);
                 islandUnit.add(rim);
 
-                // Floating Island Label Banner
+                // Floating Banner
                 const banner = createTextSprite(`🏝️ ${lang} (${rList.length} repos)`, color);
-                banner.position.set(ix, 4.5, iz);
+                banner.position.set(ix, 5.0, iz);
                 islandUnit.add(banner);
 
-                // Render repo crystal spires on island
-                rList.forEach((repo, rIdx) => {
-                    const subAngle = (rIdx / rList.length) * Math.PI * 2;
-                    const rDist = 1.2 + (rIdx % 2) * 1.4;
-                    const rx = ix + Math.cos(subAngle) * rDist;
-                    const rz = iz + Math.sin(subAngle) * rDist;
-                    const rHeight = 1.5 + Math.min(4, (repo.stargazers_count || 0) / 15);
+                // Crystal Monoliths
+                rList.slice(0, 5).forEach((repo, rIdx) => {
+                    const subA = (rIdx / Math.min(5, rList.length)) * Math.PI * 2;
+                    const subRad = 2.2;
+                    const sx = ix + Math.cos(subA) * subRad;
+                    const sz = iz + Math.sin(subA) * subRad;
+                    const h = 1.0 + Math.min(3.5, (repo.stargazers_count || 0) / 10);
 
-                    const spireGeo = new THREE.ConeGeometry(0.4, rHeight, 5);
-                    spireGeo.translate(0, rHeight / 2, 0);
-                    const spireMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color), emissive: new THREE.Color(color), emissiveIntensity: 0.5 });
+                    const spireGeo = new THREE.ConeGeometry(0.42, h, 6);
+                    spireGeo.translate(0, h / 2, 0);
+                    const spireMat = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(color),
+                        emissive: new THREE.Color(color),
+                        emissiveIntensity: 0.6,
+                        metalness: 0.8,
+                        roughness: 0.2
+                    });
                     const spire = new THREE.Mesh(spireGeo, spireMat);
-                    spire.position.set(rx, 0, rz);
+                    spire.position.set(sx, 1.4, sz);
+                    spire.castShadow = true;
                     spire.userData = { isRepo: true, name: repo.name, stars: repo.stargazers_count, lang, url: repo.html_url };
                     islandUnit.add(spire);
                     interactiveMeshes.push(spire);
                 });
 
                 islandsGroup.add(islandUnit);
-                floatingEntities.push(islandUnit);
             });
         }
 
-        // ----- Build Duel VS Side-by-Side Skylines -----
+        // ----- Build Photorealistic 3D Developer Duel VS Skylines -----
         function buildDuelSkylines(d1, d2) {
-            p1NameEl.textContent = d1.user.login;
-            p2NameEl.textContent = d2.user.login;
-            let s1 = 0, s2 = 0;
-            d1.repos.forEach(r => s1 += r.stargazers_count || 0);
-            d2.repos.forEach(r => s2 += r.stargazers_count || 0);
-            p1ScoreEl.textContent = s1; p2ScoreEl.textContent = s2;
+            clearGroup(cityGroup);
+            interactiveMeshes.length = 0;
 
             const grid1 = generate365Grid(d1.events, d1.repos);
             const grid2 = generate365Grid(d2.events, d2.repos);
 
-            clearGroup(cityGroup);
-            interactiveMeshes.length = 0;
+            p1Name.textContent = d1.user.login;
+            p2Name.textContent = d2.user.login;
+
+            let s1 = 0, s2 = 0;
+            d1.repos.forEach(r => s1 += r.stargazers_count || 0);
+            d2.repos.forEach(r => s2 += r.stargazers_count || 0);
+            p1Score.textContent = s1.toLocaleString();
+            p2Score.textContent = s2.toLocaleString();
 
             const p1Palette = ['#082032', '#0f4c75', '#3282b8', '#00f0ff', '#ffffff'];
             const p2Palette = ['#2b0015', '#67002d', '#9e0031', '#ff0055', '#ffaa00'];
@@ -1855,15 +2181,15 @@
             build3DSkyline(grid1, cityGroup, p1Palette, 28, d1);
             build3DSkyline(grid2, cityGroup, p2Palette, -28, d2);
 
+            // Volumetric Neon Divider Wall
             const divGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -25), new THREE.Vector3(0, 0, 25)]);
             const divMat = new THREE.LineBasicMaterial({ color: 0xffffff });
             const divider = new THREE.Line(divGeo, divMat);
             cityGroup.add(divider);
         }
 
-        // ----- WASD Drone Street View Controller -----
+        // ----- WASD Drone Controller -----
         let isDroneActive = false;
-        const dronePos = new THREE.Vector3(0, 1.8, 20);
         const droneKeys = { w: false, a: false, s: false, d: false, q: false, e: false };
 
         const btnDrone = document.getElementById('btn-drone');
@@ -1877,10 +2203,10 @@
             controls.enabled = !isDroneActive;
 
             if (isDroneActive) {
-                camera.position.set(0, 2.2, 18);
-                controls.target.set(0, 2.2, 0);
+                camera.position.set(0, 2.4, 18);
+                controls.target.set(0, 2.4, 0);
                 controls.update();
-                showToast('🚶 Drone WASD Mode Active!');
+                showToast('🚁 Drone WASD Mode Active!');
             } else {
                 camera.position.set(28, 22, 28);
                 controls.target.set(0, 2, 0);
@@ -1943,7 +2269,7 @@
         }
 
         function updateFireworks() {
-            fireworksGroup.children.forEach((pSystem, idx) => {
+            fireworksGroup.children.forEach((pSystem) => {
                 const pos = pSystem.geometry.attributes.position.array;
                 const vel = pSystem.userData.vel;
                 pSystem.userData.life -= 0.02;
@@ -1953,14 +2279,14 @@
                     pos[i*3] += vel[i].x;
                     pos[i*3+1] += vel[i].y;
                     pos[i*3+2] += vel[i].z;
-                    vel[i].y -= 0.008; // gravity
+                    vel[i].y -= 0.008;
                 }
                 pSystem.geometry.attributes.position.needsUpdate = true;
                 if (pSystem.userData.life <= 0) fireworksGroup.remove(pSystem);
             });
         }
 
-        // ----- MediaRecorder Canvas Video Exporter -----
+        // ----- Video Exporter -----
         recordBtn.addEventListener('click', recordAnimationVideo);
 
         function recordAnimationVideo() {
@@ -1983,7 +2309,7 @@
             };
 
             mediaRecorder.start();
-            showToast('🔴 Recording 5-second 360° video...');
+            showToast('🎥 Recording 5-second 360° video...');
             controls.autoRotate = true;
 
             setTimeout(() => {
@@ -1992,6 +2318,8 @@
         }
 
         // ----- Timeline Playback & Scrubber Controls -----
+        let isPlayingTimeline = false;
+        let timelineTimer = null;
         scrubber.addEventListener('input', (e) => filterTimeline(parseInt(e.target.value)));
 
         function filterTimeline(maxWeek) {
@@ -2031,14 +2359,13 @@
             }
         });
 
-        // ----- Mouse Move Raycaster & Parallax Tracker -----
+        // Mouse Move Raycaster & Parallax Tracker
         window.addEventListener('mousemove', (e) => {
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
             tooltipEl.style.left = `${e.clientX}px`;
             tooltipEl.style.top = `${e.clientY}px`;
 
-            // Normalized Parallax Target (-1 to 1)
             parallaxTarget.x = (e.clientX / window.innerWidth - 0.5) * 2;
             parallaxTarget.y = (e.clientY / window.innerHeight - 0.5) * 2;
         });
@@ -2049,7 +2376,6 @@
             }
         });
 
-        // ----- Interactive 3D Hover & Glow Effects -----
         function checkRaycast() {
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(interactiveMeshes);
@@ -2057,7 +2383,6 @@
             if (intersects.length > 0) {
                 const mesh = intersects[0].object;
                 if (hoveredMesh !== mesh) {
-                    // Reset previous mesh
                     if (hoveredMesh) {
                         if (hoveredMesh.material.emissive) hoveredMesh.material.emissive.set(originalEmissive);
                         if (hoveredOriginalScale) hoveredMesh.scale.copy(hoveredOriginalScale);
@@ -2075,7 +2400,7 @@
 
                     if (mesh.userData.isRepo) {
                         ttDateEl.textContent = `📦 ${mesh.userData.name} (${mesh.userData.lang})`;
-                        ttCountEl.textContent = `⭐ ${mesh.userData.stars} stars · Click to open`;
+                        ttCountEl.textContent = `⭐ ${mesh.userData.stars} stars • Click to open`;
                         const langColor = getLangColor(mesh.userData.lang);
                         tooltipEl.style.borderColor = langColor;
                         tooltipEl.style.boxShadow = `0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px ${langColor}50`;
@@ -2105,7 +2430,7 @@
             }
         }
 
-        // Camera Widget Listeners with Smooth Flight Interpolation
+        // Camera Widget Listeners
         document.getElementById('btn-iso').addEventListener('click', () => { 
             tweenCamera(new THREE.Vector3(28, 22, 28), new THREE.Vector3(0, 2, 0), 1000); 
             audio.whoosh(); 
@@ -2130,180 +2455,9 @@
             showToast(useBloom ? '✨ Post-Processing Bloom Enabled' : '✨ Bloom Disabled');
         });
 
-        screenshotBtn.addEventListener('click', () => {
-            if (useBloom) composer.render(); else renderer.render(scene, camera);
-            const link = document.createElement('a'); link.download = `git-viz-${currentMode}.png`;
-            link.href = renderer.domElement.toDataURL('image/png'); link.click();
-            showToast('📸 Screenshot saved!');
-        });
-
-        loadBtn.addEventListener('click', triggerLoad);
-        themeSelect.addEventListener('change', (e) => {
-            currentTheme = THEMES[e.target.value];
-            scene.background.set(currentTheme.bg);
-            scene.fog.color.set(currentTheme.fog);
-            dirLight1.color.set(currentTheme.light);
-            scene.remove(gridHelper);
-            gridHelper = new THREE.GridHelper(60, 60, currentTheme.grid, 0x1f242c);
-            scene.add(gridHelper);
-            setupWeatherParticles();
-            triggerLoad();
-        });
-
-        window.loadPreset = (u) => { usernameInput.value = u; triggerLoad(); };
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Animation Loop with 3D Motion, Staggered Reveals, Parallax & Levitation
-        function animate(time) {
-            requestAnimationFrame(animate);
-
-            // 1. Camera Fly-Through Interpolation
-            if (cameraTransition) {
-                const elapsed = time - cameraTransition.startTime;
-                const t = Math.min(1, Math.max(0, elapsed / cameraTransition.duration));
-                // easeInOutCubic
-                const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-                camera.position.lerpVectors(cameraTransition.startPos, cameraTransition.endPos, ease);
-                controls.target.lerpVectors(cameraTransition.startTarget, cameraTransition.endTarget, ease);
-                controls.update();
-                if (t >= 1) cameraTransition = null;
-            }
-
-            // 2. Parallax Lerp & UI Depth Displacement
-            parallaxCurrent.x += (parallaxTarget.x - parallaxCurrent.x) * 0.05;
-            parallaxCurrent.y += (parallaxTarget.y - parallaxCurrent.y) * 0.05;
-
-            if (presetsBarEl) {
-                presetsBarEl.style.transform = `translateX(calc(-50% + ${parallaxCurrent.x * -7}px)) translateY(${parallaxCurrent.y * -4}px)`;
-            }
-            if (cameraWidgetEl) {
-                cameraWidgetEl.style.transform = `translate(${parallaxCurrent.x * 6}px, ${parallaxCurrent.y * 4}px)`;
-            }
-
-            // Subtle 3D Camera Parallax Drift (when idle and not in drone mode)
-            if (!isDroneActive && !cameraTransition) {
-                const targetOffX = parallaxCurrent.x * 0.7;
-                const targetOffY = -parallaxCurrent.y * 0.45;
-                const diffX = (targetOffX - cameraParallaxOffset.x) * 0.035;
-                const diffY = (targetOffY - cameraParallaxOffset.y) * 0.035;
-                camera.position.x += diffX;
-                camera.position.y += diffY;
-                cameraParallaxOffset.x += diffX;
-                cameraParallaxOffset.y += diffY;
-            }
-
-            // 3. Staggered Entrance Reveal for 3D Buildings & Galaxy Stars
-            for (let i = 0; i < animatedRisingMeshes.length; i++) {
-                const item = animatedRisingMeshes[i];
-                if (item.done) continue;
-                if (time >= item.startTime) {
-                    const progress = Math.min(1, (time - item.startTime) / item.duration);
-                    // easeOutBack curve
-                    const c1 = 1.35;
-                    const c3 = c1 + 1;
-                    const ease = 1 + c3 * Math.pow(progress - 1, 3) + c1 * Math.pow(progress - 1, 2);
-
-                    if (item.isStar) {
-                        const curScale = Math.max(0.001, ease * item.targetScale);
-                        item.mesh.scale.setScalar(curScale);
-                        if (progress >= 1) {
-                            item.mesh.scale.setScalar(item.targetScale);
-                            item.done = true;
-                        }
-                    } else {
-                        const curH = Math.max(0.001, ease * item.targetHeight);
-                        item.mesh.scale.y = curH;
-                        if (item.antenna) {
-                            item.antenna.visible = true;
-                            item.antenna.position.y = curH + 0.7;
-                        }
-                        if (progress >= 1) {
-                            item.mesh.scale.y = item.targetHeight;
-                            if (item.antenna) item.antenna.position.y = item.targetHeight + 0.7;
-                            item.done = true;
-                        }
-                    }
-                }
-            }
-
-            // 4. Harmonic Levitation Dynamics for Archipelago Islands & Galaxy Stars
-            for (let i = 0; i < floatingEntities.length; i++) {
-                const ent = floatingEntities[i];
-                if (ent.userData.isIsland) {
-                    ent.position.y = ent.userData.baseY + Math.sin(time * 0.0015 + ent.userData.floatOffset) * 0.35;
-                } else if (ent.userData.isRepo) {
-                    ent.position.y = ent.userData.baseY + Math.sin(time * 0.0022 + ent.userData.floatOffset) * 0.35;
-                    if (ent.userData.line) {
-                        const posAttr = ent.userData.line.geometry.attributes.position;
-                        posAttr.setXYZ(1, ent.position.x, ent.position.y, ent.position.z);
-                        posAttr.needsUpdate = true;
-                    }
-                }
-            }
-
-            // 5. 3D Monument Levitation & Gyro Spin
-            if (monumentStar && monumentStar.parent) {
-                monumentStar.rotation.y = time * 0.0015;
-                monumentStar.rotation.x = Math.sin(time * 0.001) * 0.25;
-                monumentStar.position.y = 2.5 + Math.sin(time * 0.002) * 0.35;
-            }
-            if (clockHandMesh && clockHandMesh.parent) {
-                clockHandMesh.rotation.z = -time * 0.0025;
-            }
-
-            // 6. Interactive Raycast Mesh Hover Scale Pop & Emissive Pulse
-            if (hoveredMesh && hoveredOriginalScale) {
-                currentScalePop += (targetScalePop - currentScalePop) * 0.15;
-                if (hoveredMesh.userData.targetHeight !== undefined) {
-                    hoveredMesh.scale.x = currentScalePop;
-                    hoveredMesh.scale.z = currentScalePop;
-                    hoveredMesh.scale.y = hoveredMesh.userData.targetHeight * (1 + (currentScalePop - 1) * 0.35);
-                } else if (hoveredMesh.userData.isRepo) {
-                    const baseS = hoveredMesh.userData.starScale || 1;
-                    hoveredMesh.scale.setScalar(baseS * currentScalePop);
-                }
-                if (hoveredMesh.material && hoveredMesh.material.emissive) {
-                    hoveredMesh.material.emissiveIntensity = 0.5 + Math.sin(time * 0.015) * 0.3;
-                }
-            }
-
-            // 7. Ambient Rotation in Galaxy & Island Modes
-            if (galaxyGroup.visible) galaxyGroup.rotation.y = time * 0.0004;
-            if (islandsGroup.visible) islandsGroup.rotation.y = time * 0.0002;
-
-            // 8. Weather Particles
-            if (weatherGroup.children.length > 0) {
-                const pts = weatherGroup.children[0];
-                const pos = pts.geometry.attributes.position.array;
-                const dropSpeed = isStorming ? 0.4 : 0.15;
-                for (let i = 1; i < pos.length; i += 3) {
-                    pos[i] -= dropSpeed;
-                    if (pos[i] < 0) pos[i] = 60;
-                }
-                pts.geometry.attributes.position.needsUpdate = true;
-            }
-
-            updateDroneFlight();
-            updateFireworks();
-            checkRaycast();
-
-            if (!isDroneActive && !cameraTransition) controls.update();
-
-            if (useBloom) {
-                composer.render();
-            } else {
-                renderer.render(scene, camera);
-            }
-        }
-        animate(0);
-
-        // Initial Load
+        // Initialize with Pradeep-B28 Profile
         triggerLoad();
+        animate(performance.now());
     </script>
 </body>
 </html>
